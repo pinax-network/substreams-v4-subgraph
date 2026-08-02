@@ -2,8 +2,13 @@
 
 mod abi;
 mod config;
+pub mod decimal;
+pub mod entities;
 mod extract;
+mod math;
+mod metadata;
 pub mod pb;
+mod reducer;
 pub mod sink;
 pub mod state;
 
@@ -16,5 +21,7 @@ substreams_ethereum::init!();
 #[substreams::handlers::map]
 pub fn map_events(params: String, block: Block) -> Result<Events, Error> {
     let config = config::Config::parse(&params)?;
-    Ok(extract::map_block(&config, &block))
+    let mut events = extract::map_block(&config, &block);
+    metadata::enrich(&mut events)?;
+    Ok(events)
 }

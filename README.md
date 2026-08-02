@@ -18,14 +18,20 @@ stream, or alternate query service is not equivalent.
 - The Rust `map_events` module decodes only the exact PoolManager,
   PositionManager, and ArrakisHookFactory data sources and handler events.
 - Every decoded event carries block, transaction origin, transaction/log index,
-  Firehose ordinal, and Graph Node's block-global log-index trigger order.
+  effective gas price, Firehose ordinal, and Graph Node's block-global log-index
+  trigger order.
+- Historical ERC-20 calls are batched into the parallel module and apply the
+  deployed mapping's string/bytes32, unknown, zero, and `<255` fallbacks.
+- The deterministic Rust reducer implements all 18 schema entities, exact
+  handler save order, graft checkpoint seeding, Uniswap liquidity math, and
+  Graph Node v0.44's pinned 34-significant-digit decimal behavior.
 - Module parameters reject any network, deployment, graft, address, or start
   block that differs from the pinned deployment.
 - Canonical Base receipt fixtures cover all seven event kinds, malformed logs,
   signed integer boundaries, and multiple relevant events per transaction.
 
-Stateful Graph Node entity reconstruction and native-Parquet production follow
-as separate modules so neither concern can change raw trigger extraction.
+Native Graph Node Parquet production remains a separate layer so physical dump
+format concerns cannot change trigger extraction or entity semantics.
 
 ## Build and validate
 
@@ -52,6 +58,23 @@ Override `ENDPOINT`, `START_BLOCK`, or `STOP_BLOCK` as needed. The defaults are
 `base-substreams-tier1-prod.kan-sst2.pinax.io:443` and
 `26990279:26990521`.
 
+The first post-graft entity differential uses only targeted, read-only versions
+from a paused Graph Node database copy. It refuses to run while that copy's
+Graph Node StatefulSet has any replicas:
+
+```bash
+export KUBECONFIG=/path/to/authorized-cluster.yaml
+export SUBSTREAMS_API_TOKEN=...
+make verify-state-parity
+```
+
+The default oracle is `sgd1246` in `univ4base-postgres-0`, with the
+`graph-node-basegiant-0` Deployment paused. Override the Kubernetes, Postgres,
+schema, range, workload, or endpoint settings through the environment. The
+command verifies the exact deployment ID before reading, seeds state at block
+26,990,278, replays child blocks 26,990,279 through 26,990,520, and rejects both
+field mismatches and unexpected entity writes.
+
 The committed receipt fixtures make tests network-independent. Refresh them
 only when intentionally re-verifying the canonical Base blocks:
 
@@ -63,6 +86,7 @@ only when intentionally re-verifying the canonical Base blocks:
 
 - [deployed artifact inventory](docs/deployed-artifacts.md)
 - [logical and physical parity contract](docs/parity-contract.md)
+- [state reducer architecture and validation](docs/state-reducer.md)
 - [pinned Base fixture ranges](fixtures/base-ranges.json)
 - [Graph Node reference oracle](oracle/README.md)
 
