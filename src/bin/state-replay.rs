@@ -1,13 +1,23 @@
 use serde_json::Value;
 use std::collections::BTreeSet;
+use std::fs;
 use std::io::{self, BufRead};
+use std::path::PathBuf;
 use substreams_v4_subgraph::{
-    decimal::GraphDecimal, entities::*, pb::pinax::uniswap::v4::base::v1 as pb, state::EntityState,
+    decimal::GraphDecimal,
+    entities::*,
+    pb::pinax::uniswap::v4::base::v1 as pb,
+    snapshot::{PoiVersion, ReplaySnapshot, SeedVersion},
+    state::EntityState,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let snapshot_path = snapshot_path()?;
     let mut state = EntityState::default();
     let mut expected = Vec::new();
+    let mut seed_versions = Vec::new();
+    let mut table_max_vids = std::collections::BTreeMap::new();
+    let mut poi_seed = None;
     for line in io::stdin().lock().lines() {
         let line = line?;
         let Ok(value) = serde_json::from_str::<Value>(&line) else {
@@ -15,6 +25,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         if let Some(value) = value.get("@seed") {
             state.insert_seed(record(value)?)?;
+            continue;
+        }
+        if let Some(value) = value.get("@seed_version") {
+            let entity = record(value)?;
+            let data = object(value, "data")?;
+            seed_versions.push(SeedVersion {
+                vid: i64_value(data, "vid")?,
+                block_range_start: i64_value(data, "block_range_start")? as i32,
+                entity: entity.clone(),
+            });
+            state.insert_seed(entity)?;
+            continue;
+        }
+        if let Some(value) = value.get("@table") {
+            table_max_vids.insert(
+                string_value(value, "entity_type")?,
+                i64_value(value, "max_vid")?,
+            );
+            continue;
+        }
+        if let Some(value) = value.get("@poi_seed") {
+            poi_seed = Some(PoiVersion {
+                vid: i64_value(value, "vid")?,
+                block_range_start: i64_value(value, "block_range_start")? as i32,
+                id: string_value(value, "id")?,
+                digest: decode_bytea(&string_value(value, "digest")?, "digest")?,
+            });
             continue;
         }
         if let Some(value) = value.get("@expected") {
@@ -31,6 +68,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         state.apply(&pb::Events {
             events: events.iter().map(event).collect::<Result<_, _>>()?,
         })?;
+    }
+    if let Some(path) = snapshot_path {
+        write_snapshot(
+            path,
+            &ReplaySnapshot {
+                state: state.clone(),
+                seed_versions,
+                table_max_vids,
+                poi_seed,
+            },
+        )?;
     }
     if expected.is_empty() {
         serde_json::to_writer(io::stdout().lock(), &state)?;
@@ -82,6 +130,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     Ok(())
+}
+
+fn snapshot_path() -> Result<Option<PathBuf>, String> {
+    let mut args = std::env::args_os().skip(1);
+    let mut path = None;
+    while let Some(arg) = args.next() {
+        if arg == "--snapshot" {
+            let value = args
+                .next()
+                .ok_or_else(|| "--snapshot requires a path".to_owned())?;
+            path = Some(PathBuf::from(value));
+        } else {
+            return Err(format!("unknown argument `{}`", arg.to_string_lossy()));
+        }
+    }
+    Ok(path)
+}
+
+fn write_snapshot(path: PathBuf, snapshot: &ReplaySnapshot) -> Result<(), io::Error> {
+    let tmp = path.with_extension("tmp");
+    let bytes = serde_json::to_vec(snapshot).expect("snapshot serialization is infallible");
+    fs::write(&tmp, bytes)?;
+    fs::rename(tmp, path)
 }
 
 fn record(value: &Value) -> Result<EntityRecord, String> {

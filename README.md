@@ -25,13 +25,16 @@ stream, or alternate query service is not equivalent.
 - The deterministic Rust reducer implements all 18 schema entities, exact
   handler save order, graft checkpoint seeding, Uniswap liquidity math, and
   Graph Node v0.44's pinned 34-significant-digit decimal behavior.
+- The native sink emits Graph Node v0.44 dump-compatible Arrow 58.3/Parquet
+  58.3, temporal versions and clamps, table-local VIDs, metadata, graft
+  pointers, and the deployment's exact legacy `Poi$` stream.
 - Module parameters reject any network, deployment, graft, address, or start
   block that differs from the pinned deployment.
 - Canonical Base receipt fixtures cover all seven event kinds, malformed logs,
   signed integer boundaries, and multiple relevant events per transaction.
 
-Native Graph Node Parquet production remains a separate layer so physical dump
-format concerns cannot change trigger extraction or entity semantics.
+Parquet production remains isolated from trigger extraction and entity
+semantics so physical dump concerns cannot change the deterministic reducer.
 
 ## Build and validate
 
@@ -75,6 +78,10 @@ command verifies the exact deployment ID before reading, seeds state at block
 26,990,278, replays child blocks 26,990,279 through 26,990,520, and rejects both
 field mismatches and unexpected entity writes.
 
+Build and restore the bounded Graph Node-native Parquet proof fixture with the
+commands in [Graph Node-native Parquet](docs/native-parquet.md). The fixture is
+selective and is not a production replacement dump.
+
 The committed receipt fixtures make tests network-independent. Refresh them
 only when intentionally re-verifying the canonical Base blocks:
 
@@ -87,6 +94,7 @@ only when intentionally re-verifying the canonical Base blocks:
 - [deployed artifact inventory](docs/deployed-artifacts.md)
 - [logical and physical parity contract](docs/parity-contract.md)
 - [state reducer architecture and validation](docs/state-reducer.md)
+- [Graph Node-native Parquet build and restore](docs/native-parquet.md)
 - [pinned Base fixture ranges](fixtures/base-ranges.json)
 - [Graph Node reference oracle](oracle/README.md)
 

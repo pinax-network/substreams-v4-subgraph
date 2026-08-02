@@ -8,6 +8,43 @@ SET LOCAL statement_timeout = '5min';
 SET LOCAL lock_timeout = '5s';
 SET LOCAL search_path = :"schema", public;
 
+WITH params AS (SELECT :seed_block::integer AS seed_block), table_max(entity_type, max_vid) AS (
+    SELECT 'PoolManager', coalesce(max(vid), -1) FROM pool_manager, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Bundle', coalesce(max(vid), -1) FROM bundle, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Token', coalesce(max(vid), -1) FROM token, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Pool', coalesce(max(vid), -1) FROM pool, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Tick', coalesce(max(vid), -1) FROM tick, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'UniswapDayData', coalesce(max(vid), -1) FROM uniswap_day_data, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'PoolDayData', coalesce(max(vid), -1) FROM pool_day_data, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'PoolHourData', coalesce(max(vid), -1) FROM pool_hour_data, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'TokenDayData', coalesce(max(vid), -1) FROM token_day_data, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'TokenHourData', coalesce(max(vid), -1) FROM token_hour_data, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Position', coalesce(max(vid), -1) FROM position, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'ArrakisHook', coalesce(max(vid), -1) FROM arrakis_hook, params WHERE lower(block_range) <= seed_block
+    UNION ALL SELECT 'Transaction', coalesce(max(vid), -1) FROM transaction, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'Swap', coalesce(max(vid), -1) FROM swap, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'ModifyLiquidity', coalesce(max(vid), -1) FROM modify_liquidity, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'Subscribe', coalesce(max(vid), -1) FROM subscribe, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'Unsubscribe', coalesce(max(vid), -1) FROM unsubscribe, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'Transfer', coalesce(max(vid), -1) FROM transfer, params WHERE block$ <= seed_block
+    UNION ALL SELECT 'Poi$', coalesce(max(vid), -1) FROM poi2$, params WHERE lower(block_range) <= seed_block
+)
+SELECT jsonb_build_object(
+    '@table', jsonb_build_object('entity_type', entity_type, 'max_vid', max_vid)
+)::text
+FROM table_max ORDER BY entity_type;
+
+WITH params AS (SELECT :seed_block::integer AS seed_block)
+SELECT jsonb_build_object('@poi_seed', jsonb_build_object(
+    'vid', vid,
+    'block_range_start', lower(block_range),
+    'id', id,
+    'digest', digest
+))::text
+FROM poi2$, params
+WHERE block_range @> seed_block
+ORDER BY id;
+
 WITH
 params AS (
     SELECT
@@ -172,51 +209,51 @@ seed_token_ids AS (
     SELECT token_1 FROM seed_pool_rows
 ),
 records(phase, entity_type, id, data) AS (
-    SELECT 0, 'PoolManager', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'PoolManager', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM pool_manager t, params
     WHERE t.block_range @> seed_block
       AND t.id = '0x498581ff718922c3f8e6a244956af099b2652b2b'
     UNION ALL
-    SELECT 0, 'Bundle', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'Bundle', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM bundle t, params WHERE t.block_range @> seed_block AND t.id = '1'
     UNION ALL
-    SELECT 0, 'Token', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'Token', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM token t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM seed_token_ids)
     UNION ALL
-    SELECT 0, 'Pool', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'Pool', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM pool t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM seed_pool_ids)
     UNION ALL
-    SELECT 0, 'Tick', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'Tick', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM tick t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_tick_ids)
     UNION ALL
-    SELECT 0, 'UniswapDayData', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'UniswapDayData', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM uniswap_day_data t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_uniswap_day_ids)
     UNION ALL
-    SELECT 0, 'PoolDayData', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'PoolDayData', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM pool_day_data t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_pool_day_ids)
     UNION ALL
-    SELECT 0, 'PoolHourData', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'PoolHourData', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM pool_hour_data t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_pool_hour_ids)
     UNION ALL
-    SELECT 0, 'TokenDayData', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'TokenDayData', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM token_day_data t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_token_day_ids)
     UNION ALL
-    SELECT 0, 'TokenHourData', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'TokenHourData', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM token_hour_data t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_token_hour_ids)
     UNION ALL
-    SELECT 0, 'Position', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'Position', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM position t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM touched_position_ids)
     UNION ALL
-    SELECT 0, 'ArrakisHook', t.id, to_jsonb(t) - ARRAY['vid', 'block_range']
+    SELECT 0, 'ArrakisHook', t.id, (to_jsonb(t) - 'block_range') || jsonb_build_object('block_range_start', lower(t.block_range))
     FROM arrakis_hook t, params
     WHERE t.block_range @> seed_block AND t.id IN (SELECT id FROM changed_arrakis_hook_ids)
 
@@ -292,7 +329,7 @@ records(phase, entity_type, id, data) AS (
 SELECT (
     CASE phase
         WHEN 0 THEN jsonb_build_object(
-            '@seed', jsonb_build_object('entity_type', entity_type, 'data', data)
+            '@seed_version', jsonb_build_object('entity_type', entity_type, 'data', data)
         )
         ELSE jsonb_build_object(
             '@expected', jsonb_build_object('entity_type', entity_type, 'data', data)

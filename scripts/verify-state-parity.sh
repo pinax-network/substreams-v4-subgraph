@@ -44,6 +44,10 @@ fi
 
 cargo build --locked --target wasm32-unknown-unknown --release
 cargo build --locked --features native --bin state-replay
+replay_args=()
+if [[ -n "${SNAPSHOT_OUTPUT:-}" ]]; then
+    replay_args=(--snapshot "$SNAPSHOT_OUTPUT")
+fi
 
 set +e
 result=$(
@@ -57,7 +61,7 @@ result=$(
             < scripts/export-state-parity.sql
         substreams run -e "$endpoint" substreams.yaml map_events \
             -s "$start_block" -t "$stop_block" -o jsonl
-    } | target/debug/state-replay
+    } | target/debug/state-replay "${replay_args[@]}"
 )
 replay_status=$?
 set -e

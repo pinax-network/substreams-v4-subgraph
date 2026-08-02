@@ -8,8 +8,12 @@ mod extract;
 mod math;
 mod metadata;
 pub mod pb;
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+pub mod poi;
 mod reducer;
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 pub mod sink;
+pub mod snapshot;
 pub mod state;
 
 use pb::pinax::uniswap::v4::base::v1::Events;
