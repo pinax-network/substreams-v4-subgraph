@@ -49,6 +49,13 @@ function blockTag(number) {
   return `0x${number.toString(16)}`
 }
 
+const graftBlock = await rpc('eth_getBlockByNumber', [blockTag(fixtures.graft_seed.block), false])
+assert(graftBlock, 'graft seed: block not found')
+assert.equal(graftBlock.hash, fixtures.graft_seed.hash, 'graft seed: block hash')
+assert.equal(fixtures.graft_seed.copy_is_inclusive, true, 'graft seed must be inclusive')
+assert.equal(fixtures.graft_seed.first_child_block, fixtures.graft_seed.block + 1, 'first child block')
+console.log(`graft seed: block ${fixtures.graft_seed.block} is canonical and copy-inclusive`)
+
 for (const fixture of fixtures.ranges) {
   const [startBlock, endBlock, logs] = await Promise.all([
     rpc('eth_getBlockByNumber', [blockTag(fixture.start_block), false]),

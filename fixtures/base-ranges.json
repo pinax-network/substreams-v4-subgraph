@@ -3,6 +3,14 @@
   "network": "base",
   "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
   "observed_at": "2026-08-02",
+  "graft_seed": {
+    "base": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+    "block": 26990278,
+    "hash": "0x3365afb2ec41d64886321de82b8fd73427fda55fcf731bf5a2888c1a2a2c8948",
+    "copy_is_inclusive": true,
+    "first_child_block": 26990279,
+    "purpose": "Graph Node copies base state through this block and sets the child head here. Logs in this block are seed input, not newly executed child handlers."
+  },
   "event_topics": {
     "Initialize(bytes32,address,address,uint24,int24,address,uint160,int24)": "0xdd466e674ea557f56295e2d0218a125ea4b4f0f6f3307b95f85e6110838d6438",
     "ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)": "0xf208f4912782fd25c7f114ca3723a2d5dd6f3bcc3ac8db5af63baa85f711d5ec",
@@ -14,21 +22,21 @@
   },
   "ranges": [
     {
-      "name": "graft-boundary-core-events",
-      "start_block": 26990278,
-      "start_hash": "0x3365afb2ec41d64886321de82b8fd73427fda55fcf731bf5a2888c1a2a2c8948",
+      "name": "first-child-core-events",
+      "start_block": 26990279,
+      "start_hash": "0x61319f90a08baaf76868d3fd751bb9e856ea6f4fdebe510a5a316dd57bc47867",
       "end_block": 26990520,
       "end_hash": "0xb8c62ea50f8abc85c14bfb970f79dd024e9dd5bce685ca1f1b5e4beddfbd8fd9",
       "expected_events": {
         "Initialize": 1,
         "ModifyLiquidity": 14,
-        "Swap": 239,
+        "Swap": 238,
         "Subscription": 0,
         "Unsubscription": 0,
         "Transfer": 4,
         "LogCreatePrivateHook": 0
       },
-      "purpose": "Exercises the exact child graft boundary, multiple events per block and transaction, swaps, liquidity changes, transfers, and a new pool initialization."
+      "purpose": "Starts at the first block the child actually executes and covers multiple events per block and transaction, swaps, liquidity changes, transfers, and a new pool initialization."
     },
     {
       "name": "arrakis-hook",

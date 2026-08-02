@@ -111,7 +111,11 @@ is accepted; snapshot equality alone is never sufficient.
 ## Pinned fixtures
 
 [`fixtures/base-ranges.json`](../fixtures/base-ranges.json) pins four ranges and
-their boundary hashes. Together they cover the graft boundary, Initialize,
+their boundary hashes plus the inclusive graft seed checkpoint. Graph Node
+copies base state through block 26,990,278, sets the child head to that block,
+and begins new child execution at 26,990,279. A Substreams run must therefore
+seed the result of graft-block handlers without emitting them again. Together
+the fixtures cover the seed/first-child boundary, Initialize,
 ModifyLiquidity, Swap, Transfer, Subscription, Unsubscription, Arrakis hook
 creation, multiple events in a block/transaction, and high-density blocks.
 
