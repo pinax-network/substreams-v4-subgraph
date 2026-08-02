@@ -1,0 +1,78 @@
+name: substreams-v4-oracle
+
+services:
+  postgres:
+    image: postgres:16.11-alpine@sha256:4327b9fd295502f326f44153a1045a7170ddbfffed1c3829798328556cfd09e2
+    command:
+      - postgres
+      - -cshared_preload_libraries=pg_stat_statements
+      - -cmax_connections=200
+    environment:
+      POSTGRES_USER: graph
+      POSTGRES_PASSWORD: oracle
+      POSTGRES_DB: graph
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graph -d graph"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  ipfs:
+    image: ipfs/kubo:v0.34.1@sha256:1cf421fbd881d01144c0da39aa1511c05f1ef3fd5eebee6ba7487ecc0f915a44
+    healthcheck:
+      test: ["CMD", "ipfs", "id"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "127.0.0.1:15001:5001"
+      - "127.0.0.1:18080:8080"
+    volumes:
+      - ipfs-data:/data/ipfs
+      - ipfs-staging:/export
+
+  graph-node:
+    image: graphprotocol/graph-node:v0.44.0@sha256:c14c6d8e2b2b1ed89f6a89babf48d807b18a43e372fda7fb495d3a9050b65b8b
+    platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        envsubst < /config/config.toml.template > /tmp/config.toml
+        exec start
+    environment:
+      PINAX_API_KEY: "${PINAX_API_KEY:?PINAX_API_KEY is required}"
+      GRAPH_NODE_CONFIG: /tmp/config.toml
+      GRAPH_NODE_FIREHOSE_MAX_DECODE_SIZE: "200"
+      GRAPH_LOG: "${ORACLE_GRAPH_LOG:-warn}"
+      RUST_LOG: warn
+      ipfs: ipfs:5001
+      node_id: oracle
+      node_role: combined-node
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8030"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+    ports:
+      - "127.0.0.1:${ORACLE_GRAPHQL_PORT:-18100}:8000"
+      - "127.0.0.1:${ORACLE_ADMIN_PORT:-18120}:8020"
+      - "127.0.0.1:${ORACLE_STATUS_PORT:-18130}:8030"
+      - "127.0.0.1:${ORACLE_METRICS_PORT:-18140}:8040"
+    volumes:
+      - ./config.toml.template:/config/config.toml.template:ro
+      - ./.runtime/dumps:/dumps
+
+volumes:
+  postgres-data:
+  ipfs-data:
+  ipfs-staging:
