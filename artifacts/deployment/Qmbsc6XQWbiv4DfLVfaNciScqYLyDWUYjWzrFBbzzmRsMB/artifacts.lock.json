@@ -1,0 +1,147 @@
+{
+  "format_version": 1,
+  "deployment": {
+    "id": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+    "name": "uniswap-v4-base-3",
+    "network": "base",
+    "graft_base": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+    "graft_block": 26990278
+  },
+  "external_cids": [
+    {
+      "role": "graft_base",
+      "cid": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy"
+    }
+  ],
+  "source": {
+    "repository": "https://github.com/Uniswap/v4-subgraph",
+    "commit": "773849724baa7afdc50848978bd8d7087ccef000",
+    "classification": "reconstructed",
+    "reason": "The schema is byte-identical and all ABIs are semantically identical. Rebuilt mappings have the same sections, imports, functions, data, and control flow; only compiler-generated source-line operands passed to abort differ. The deployed WASMs remain authoritative."
+  },
+  "toolchain": {
+    "graph_node_tag": "v0.44.0",
+    "graph_node_commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "optional_sql_sink_tag": "v4.13.1",
+    "optional_sql_sink_commit": "c05b15e5c82dadb6c74efe12087a5cc1bc215c9a"
+  },
+  "data_sources": [
+    {
+      "name": "PoolManager",
+      "address": "0x498581fF718922c3f8e6A244956aF099B2652b2b",
+      "start_block": 25350988
+    },
+    {
+      "name": "PositionManager",
+      "address": "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
+      "start_block": 25350993
+    },
+    {
+      "name": "ArrakisHookFactory",
+      "address": "0xeF129a430032C8183abA158C1a70799e3b840dF9",
+      "start_block": 28450225
+    }
+  ],
+  "artifacts": [
+    {
+      "role": "manifest",
+      "path": "subgraph.yaml",
+      "cid": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+      "sha256": "d307f848cbbbcee64b3b7ce52fb905432c866d1221c21a0f0f0818171bd47bcb",
+      "bytes": 3329
+    },
+    {
+      "role": "schema",
+      "path": "schema.graphql",
+      "cid": "QmcGeTxBaueyQtNuV2p9DGjsnu9wNDQqMgTR2XyT3Fiz6U",
+      "sha256": "91340f4040d30948a9f417d10a78d3247561d52a5519d4840eb342f5bd5dfb52",
+      "bytes": 13647
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20.json",
+      "cid": "QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1",
+      "sha256": "b3ce2325d5da94241c5ee0fac37840c017e04f8569ea56e955863b34d9b6a9b1",
+      "bytes": 3685
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20SymbolBytes.json",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "bytes": 270
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20NameBytes.json",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "bytes": 268
+    },
+    {
+      "role": "abi",
+      "path": "abis/PoolManager.json",
+      "cid": "QmWZenL7LN5D4t5vVa3dhCvTbsHxEvQUHczxCXdq3PasVV",
+      "sha256": "fcef5aea782892d4e98b0b01f167706943ae1a0f95b238c3dc416af6ab91a0a7",
+      "bytes": 27180
+    },
+    {
+      "role": "abi",
+      "path": "abis/PositionManager.json",
+      "cid": "Qmab9Ef8omf249PgFd77cAN2FbNxPJobYfXwihLFFZswJS",
+      "sha256": "625b7f3aece3eee74b62ca159226cefd44a79c24fb546b20466df115070dd0a9",
+      "bytes": 24220
+    },
+    {
+      "role": "abi",
+      "path": "abis/ArrakisHookFactory.json",
+      "cid": "QmRYVaUVwJjW7FKDgLNJzHs3iNvnyBoBGmdzy47ofAoufd",
+      "sha256": "e83d23cd3976c733944cc8e109d2666d289bba770cf72b15ca0ba95aad88a9ac",
+      "bytes": 1609
+    },
+    {
+      "role": "mapping",
+      "path": "mappings/PoolManager.wasm",
+      "cid": "QmaZ7jmx2no1pp4W5G1PqbxyeaNXBPwpvgTnN42xfZGvva",
+      "sha256": "e3be9d63cd55753091f7250293ebbd7b52a828f4036df4e3ce36bc1f54cd8c80",
+      "bytes": 102266
+    },
+    {
+      "role": "mapping",
+      "path": "mappings/PositionManager.wasm",
+      "cid": "QmeoqsF1YGVTpVitSqiC7zQ1L8GqceQ5QviSm8Dp1gG2Ba",
+      "sha256": "ec61de1fa41459aef6d06720a39c5ef6da27813c6419f7000896049cea030a87",
+      "bytes": 41027
+    },
+    {
+      "role": "mapping",
+      "path": "mappings/ArrakisHookFactory.wasm",
+      "cid": "Qmaa6uXvHHjA2gAtPYSZSN12iAKd6Ru7tqm4Ju7KoiU1yW",
+      "sha256": "08d1ee83191128be049c807aa3a869f30fc26b1b25399698b627ecc6273c3884",
+      "bytes": 33382
+    }
+  ],
+  "schema": {
+    "entity_count": 18,
+    "entities": [
+      "PoolManager",
+      "Bundle",
+      "Token",
+      "Pool",
+      "Tick",
+      "Transaction",
+      "Swap",
+      "ModifyLiquidity",
+      "UniswapDayData",
+      "PoolDayData",
+      "PoolHourData",
+      "TokenDayData",
+      "TokenHourData",
+      "Position",
+      "Subscribe",
+      "Unsubscribe",
+      "Transfer",
+      "ArrakisHook"
+    ]
+  }
+}
