@@ -66,6 +66,8 @@ pub struct TransactionRef {
     pub origin: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes="vec", tag="4")]
     pub to: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag="5")]
+    pub gas_price: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -100,6 +102,24 @@ pub struct Initialize {
     pub sqrt_price_x96: ::prost::alloc::string::String,
     #[prost(string, tag="8")]
     pub tick: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="9")]
+    pub token0_metadata: ::core::option::Option<TokenMetadata>,
+    #[prost(message, optional, tag="10")]
+    pub token1_metadata: ::core::option::Option<TokenMetadata>,
+}
+/// The final values produced by the deployed mapping's string/bytes32 ERC-20
+/// fallback sequence. A missing decimals value means the handler bails out.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TokenMetadata {
+    #[prost(string, tag="1")]
+    pub symbol: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub total_supply: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="4")]
+    pub decimals: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

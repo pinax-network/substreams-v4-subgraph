@@ -70,6 +70,8 @@ fn decode_pool_manager(log: &v2::Log) -> Option<pb::event::Payload> {
             hooks: event.hooks,
             sqrt_price_x96: event.sqrt_price_x96.to_string(),
             tick: event.tick.to_string(),
+            token0_metadata: None,
+            token1_metadata: None,
         }));
     }
 
@@ -157,6 +159,14 @@ fn event_metadata(
             hash: transaction.hash.clone(),
             origin: transaction.from.clone(),
             to: transaction.to.clone(),
+            gas_price: transaction
+                .gas_price
+                .as_ref()
+                .map(|value| {
+                    let value: substreams::scalar::BigInt = value.into();
+                    value.to_string()
+                })
+                .unwrap_or_else(|| "0".to_owned()),
         }),
         log: Some(pb::LogRef {
             transaction_log_index: log.index,

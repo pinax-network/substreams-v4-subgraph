@@ -39,5 +39,9 @@ run: build
 verify-live: build
 	ENDPOINT=$(ENDPOINT) ./scripts/verify-substreams-events.mjs
 
+.PHONY: verify-state-parity
+verify-state-parity:
+	ENDPOINT=$(ENDPOINT) ./scripts/verify-state-parity.sh
+
 .PHONY: validate
 validate: check-generated test lint pack

@@ -36,6 +36,7 @@ message TransactionRef {
   bytes hash = 2;
   bytes origin = 3;
   bytes to = 4;
+  string gas_price = 5;
 }
 
 message LogRef {
@@ -62,6 +63,17 @@ message Initialize {
   bytes hooks = 6;
   string sqrt_price_x96 = 7;
   string tick = 8;
+  TokenMetadata token0_metadata = 9;
+  TokenMetadata token1_metadata = 10;
+}
+
+// The final values produced by the deployed mapping's string/bytes32 ERC-20
+// fallback sequence. A missing decimals value means the handler bails out.
+message TokenMetadata {
+  string symbol = 1;
+  string name = 2;
+  string total_supply = 3;
+  optional string decimals = 4;
 }
 
 message ModifyLiquidity {
