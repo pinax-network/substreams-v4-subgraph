@@ -1,0 +1,53 @@
+query OracleCheckpoint {
+  _meta {
+    block { number hash }
+    deployment
+    hasIndexingErrors
+  }
+  poolManagers(first: 25, orderBy: id, orderDirection: asc, block: { number: __BLOCK_NUMBER__ }) {
+    id
+    poolCount
+    txCount
+    totalVolumeUSD
+    totalVolumeETH
+    totalFeesUSD
+    totalFeesETH
+    totalValueLockedUSD
+    totalValueLockedETH
+    owner
+  }
+  bundles(first: 25, orderBy: id, orderDirection: asc, block: { number: __BLOCK_NUMBER__ }) {
+    id
+    ethPriceUSD
+  }
+  tokens(first: 25, orderBy: id, orderDirection: asc, block: { number: __BLOCK_NUMBER__ }) {
+    id
+    symbol
+    name
+    decimals
+    totalSupply
+    volume
+    volumeUSD
+    txCount
+    poolCount
+    totalValueLocked
+    totalValueLockedUSD
+    derivedETH
+  }
+  pools(first: 25, orderBy: id, orderDirection: asc, block: { number: __BLOCK_NUMBER__ }) {
+    id
+    createdAtTimestamp
+    createdAtBlockNumber
+    token0 { id }
+    token1 { id }
+    feeTier
+    liquidity
+    sqrtPrice
+    token0Price
+    token1Price
+    tick
+    tickSpacing
+    txCount
+    hooks
+  }
+}

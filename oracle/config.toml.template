@@ -1,0 +1,27 @@
+[store]
+
+[store.primary]
+connection = "postgresql://graph:oracle@postgres:5432/graph"
+pool_size = 20
+
+[deployment]
+
+[[deployment.rule]]
+match = { network = "base" }
+shard = "primary"
+indexers = [ "oracle" ]
+
+[[deployment.rule]]
+match = { }
+shard = "primary"
+indexers = [ "oracle" ]
+
+[chains]
+ingestor = "oracle"
+
+[chains.base]
+shard = "primary"
+provider = [
+  { label = "firehose", details = { type = "firehose", url = "https://base.firehose.pinax.network:443", features = ["filters"], key = "${PINAX_API_KEY}" } },
+  { label = "pinax", details = { type = "web3", url = "https://base.rpc.pinax.network/v1/${PINAX_API_KEY}/", features = ["archive", "traces"] } }
+]

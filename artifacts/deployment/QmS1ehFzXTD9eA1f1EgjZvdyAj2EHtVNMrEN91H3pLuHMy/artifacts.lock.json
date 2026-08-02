@@ -1,0 +1,109 @@
+{
+  "format_version": 1,
+  "deployment": {
+    "id": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+    "name": "uniswap-v4-base-graft-parent",
+    "network": "base",
+    "graft_base": null,
+    "graft_block": null
+  },
+  "external_cids": [],
+  "source": {
+    "repository": "https://github.com/Uniswap/v4-subgraph",
+    "commit": null,
+    "classification": "unknown",
+    "reason": "This root deployment is used only as the Graph Node graft-state oracle. Its deployed bytes remain authoritative."
+  },
+  "data_sources": [
+    {
+      "name": "PoolManager",
+      "address": "0x498581fF718922c3f8e6A244956aF099B2652b2b",
+      "start_block": 25350988
+    },
+    {
+      "name": "PositionManager",
+      "address": "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
+      "start_block": 25350993
+    }
+  ],
+  "artifacts": [
+    {
+      "role": "manifest",
+      "path": "subgraph.yaml",
+      "cid": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+      "sha256": "890b7dad0057423bde4b7f978fa01d4f3722394067d4db49d08d85e653f56396",
+      "bytes": 2554
+    },
+    {
+      "role": "schema",
+      "path": "schema.graphql",
+      "cid": "QmTwiKpYxqMefzaNv9qqmqPuXNpBuvvKTSVvk28ZY1a7x3",
+      "sha256": "25a754214e9075c81205d1109b32de5e0a0f2a31f87668a6c51bebc72e444a89",
+      "bytes": 13055
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20.json",
+      "cid": "QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1",
+      "sha256": "b3ce2325d5da94241c5ee0fac37840c017e04f8569ea56e955863b34d9b6a9b1",
+      "bytes": 3685
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20SymbolBytes.json",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "bytes": 270
+    },
+    {
+      "role": "abi",
+      "path": "abis/ERC20NameBytes.json",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "bytes": 268
+    },
+    {
+      "role": "abi",
+      "path": "abis/PoolManager.json",
+      "cid": "QmWZenL7LN5D4t5vVa3dhCvTbsHxEvQUHczxCXdq3PasVV",
+      "sha256": "fcef5aea782892d4e98b0b01f167706943ae1a0f95b238c3dc416af6ab91a0a7",
+      "bytes": 27180
+    },
+    {
+      "role": "abi",
+      "path": "abis/PositionManager.json",
+      "cid": "Qmab9Ef8omf249PgFd77cAN2FbNxPJobYfXwihLFFZswJS",
+      "sha256": "625b7f3aece3eee74b62ca159226cefd44a79c24fb546b20466df115070dd0a9",
+      "bytes": 24220
+    },
+    {
+      "role": "mapping",
+      "path": "mappings/Mapping.wasm",
+      "cid": "QmXhDh4CRQMrBRFAc2ZZD3Q74DPHKBKySbyqqw7sGEXFq9",
+      "sha256": "8abc6a01095b56d998ee85ede939172febb52ffaa63a311d44fb5e52b80db0ca",
+      "bytes": 103856
+    }
+  ],
+  "schema": {
+    "entity_count": 17,
+    "entities": [
+      "PoolManager",
+      "Bundle",
+      "Token",
+      "Pool",
+      "Tick",
+      "Transaction",
+      "Swap",
+      "ModifyLiquidity",
+      "UniswapDayData",
+      "PoolDayData",
+      "PoolHourData",
+      "TokenDayData",
+      "TokenHourData",
+      "Position",
+      "Subscribe",
+      "Unsubscribe",
+      "Transfer"
+    ]
+  }
+}
