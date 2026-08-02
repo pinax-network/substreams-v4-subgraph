@@ -43,5 +43,10 @@ verify-live: build
 verify-state-parity:
 	ENDPOINT=$(ENDPOINT) ./scripts/verify-state-parity.sh
 
+.PHONY: build-parquet-fixture
+build-parquet-fixture:
+	@test -n "$(OUTPUT)" || (echo "set OUTPUT to a new dump directory" >&2; exit 1)
+	ENDPOINT=$(ENDPOINT) ./scripts/build-parquet-fixture.sh "$(OUTPUT)"
+
 .PHONY: validate
 validate: check-generated test lint pack

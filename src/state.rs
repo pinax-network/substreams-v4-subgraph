@@ -30,6 +30,10 @@ pub enum StateError {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityState {
+    /// Canonical blocks that ran at least one mapping handler. Graph Node
+    /// advances proof-of-indexing even when a handler writes no entities.
+    #[serde(default)]
+    pub processed_blocks: BTreeMap<u64, Vec<u8>>,
     pub pool_managers: BTreeMap<String, PoolManager>,
     pub bundles: BTreeMap<String, Bundle>,
     pub tokens: BTreeMap<String, Token>,
@@ -64,6 +68,10 @@ impl EntityState {
             )
         });
         for event in ordered {
+            let block = event.block.as_ref().ok_or(StateError::Missing("block"))?;
+            self.processed_blocks
+                .entry(block.number)
+                .or_insert_with(|| block.hash.clone());
             reducer::apply_event(self, event)?;
         }
         Ok(())
