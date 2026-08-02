@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package pinax.uniswap.v4.base.v1;
+
+message Events {
+  repeated Event events = 1;
+}
+
+message Event {
+  BlockRef block = 1;
+  TransactionRef transaction = 2;
+  LogRef log = 3;
+  DataSource source = 4;
+
+  oneof payload {
+    Initialize initialize = 10;
+    ModifyLiquidity modify_liquidity = 11;
+    Swap swap = 12;
+    Subscription subscription = 13;
+    Unsubscription unsubscription = 14;
+    Transfer transfer = 15;
+    LogCreatePrivateHook log_create_private_hook = 16;
+  }
+}
+
+message BlockRef {
+  uint64 number = 1;
+  bytes hash = 2;
+  bytes parent_hash = 3;
+  int64 timestamp_seconds = 4;
+  int32 timestamp_nanos = 5;
+}
+
+message TransactionRef {
+  uint32 index = 1;
+  bytes hash = 2;
+  bytes origin = 3;
+  bytes to = 4;
+}
+
+message LogRef {
+  uint32 transaction_log_index = 1;
+  uint32 block_log_index = 2;
+  uint64 ordinal = 3;
+  bytes address = 4;
+  uint64 graph_node_trigger_order = 5;
+}
+
+enum DataSource {
+  DATA_SOURCE_UNSPECIFIED = 0;
+  DATA_SOURCE_POOL_MANAGER = 1;
+  DATA_SOURCE_POSITION_MANAGER = 2;
+  DATA_SOURCE_ARRAKIS_HOOK_FACTORY = 3;
+}
+
+message Initialize {
+  bytes pool_id = 1;
+  bytes currency0 = 2;
+  bytes currency1 = 3;
+  string fee = 4;
+  string tick_spacing = 5;
+  bytes hooks = 6;
+  string sqrt_price_x96 = 7;
+  string tick = 8;
+}
+
+message ModifyLiquidity {
+  bytes pool_id = 1;
+  bytes sender = 2;
+  string tick_lower = 3;
+  string tick_upper = 4;
+  string liquidity_delta = 5;
+  bytes salt = 6;
+}
+
+message Swap {
+  bytes pool_id = 1;
+  bytes sender = 2;
+  string amount0 = 3;
+  string amount1 = 4;
+  string sqrt_price_x96 = 5;
+  string liquidity = 6;
+  string tick = 7;
+  string fee = 8;
+}
+
+message Subscription {
+  string token_id = 1;
+  bytes subscriber = 2;
+}
+
+message Unsubscription {
+  string token_id = 1;
+  bytes subscriber = 2;
+}
+
+message Transfer {
+  bytes from = 1;
+  bytes to = 2;
+  string token_id = 3;
+}
+
+message LogCreatePrivateHook {
+  bytes hook = 1;
+  bytes module = 2;
+  bytes salt = 3;
+}
