@@ -1,0 +1,35 @@
+specVersion: v0.1.0
+package:
+  name: uniswap_v4_base_backfill
+  version: v0.1.0
+  url: https://github.com/pinax-network/substreams-v4-subgraph
+  description: Exact deployed-event stream for the Base Uniswap v4 Graph Node backfill
+
+protobuf:
+  files:
+    - events.proto
+  importPaths:
+    - ./proto
+  excludePaths:
+    - sf/substreams
+    - google
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/substreams_v4_subgraph.wasm
+
+modules:
+  - name: map_events
+    kind: map
+    initialBlock: 25350988
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:pinax.uniswap.v4.base.v1.Events
+
+params:
+  map_events: "network=base;deployment=Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB;graft_base=QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy;graft_block=26990278;pool_manager=0x498581ff718922c3f8e6a244956af099b2652b2b;pool_manager_start=25350988;position_manager=0x7c5f5a4bbd8fd63184577525326123b519429bdc;position_manager_start=25350993;arrakis_hook_factory=0xef129a430032c8183aba158c1a70799e3b840df9;arrakis_hook_factory_start=28450225"
+
+network: base
