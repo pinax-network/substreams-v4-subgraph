@@ -15,7 +15,7 @@ log=$artifact_dir/offline-parity.log
 report=$artifact_dir/offline-parity.json
 
 set +e
-cargo test --locked --all-features -- --nocapture 2>&1 | tee "$log"
+cargo test --locked --all-targets -- --nocapture 2>&1 | tee "$log"
 test_status=${PIPESTATUS[0]}
 set -e
 
@@ -37,8 +37,8 @@ jq -n \
         "all seven canonical Base event kinds decode from pinned receipts",
         "malformed and wrong-address logs are ignored",
         "signed boundaries and Graph Node trigger order are preserved",
-        "all 18 schema entities reduce deterministically",
-        "Graph Node save order and decimal behavior are exact"
+        "historical token metadata fallback behavior is exact",
+        "network, deployment, graft, address, and start-block parameters are pinned"
       ],
       log:"offline-parity.log"
     }

@@ -1,9 +1,11 @@
 # Event decoder validation
 
-Validation date: 2026-08-02
+Validation date: 2026-08-03
 
 This milestone validates raw trigger extraction for the exact deployed Base
 subgraph. It does not claim entity-state, POI, or native-Parquet parity; those
+gates are owned by
+[`pinax-network/substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill) and
 remain separate gates.
 
 ## Reproducible build
@@ -11,16 +13,15 @@ remain separate gates.
 - Rust: 1.90.0 (`rust-toolchain.toml`)
 - Substreams Rust SDK: 0.7.6
 - Substreams Ethereum: 0.11.1
-- WASM SHA-256:
-  `a0f325dc5384f4a48e4d3f7822a7384011adc3bf1b86c716a6c7df58fb5ac7a4`
-- SPKG SHA-256:
-  `c604051c6b7416e800181b3ee1afcd6a68f8bd13081be592ef9877a87b16cc0f`
-- SPKG module hash:
-  `c26aa7a6eed746b310561adfdf3d0c06a6572f28`
+- certified v0.1.0 release SPKG SHA-256:
+  `75b810d18ec1dc78ca5535b2cc56828334c873b93d39500f93ca036499048453`
+- certified v0.1.0 `map_events` module hash:
+  `8fbf7c14cefe3d5b0c249a8cf4566bcaa8d2ed26`
 
-`make validate` rebuilds the WASM and package from a clean checkout. The SPKG
-is written to `spkg/uniswap-v4-base-backfill-v0.1.0.spkg` and is intentionally
-not committed.
+`make validate` rebuilds the WASM and package from a clean checkout. On the
+handoff branch the SPKG is written to
+`spkg/uniswap-v4-base-backfill-v0.1.1.spkg` and is intentionally not committed.
+The backfill runtime continues to pin the immutable v0.1.0 release above.
 
 ## Offline tests
 
@@ -53,3 +54,21 @@ strict per-block trigger order.
 All four runs passed. The first range starts at the first child-executed block;
 the graft seed at block 26990278 remains inclusive base state and is not
 re-executed as a child handler block.
+
+## Runtime handoff differential
+
+Moving the native Graph Node runtime out of this crate changes the compiled
+WASM bytes and therefore the v0.1.1 module hash. To exclude a semantic change,
+the released v0.1.0 package and the slimmed v0.1.1 package were run against the
+same endpoint for all four ranges above. Their emitted `map_events` JSONL
+records were compared byte-for-byte after excluding CLI progress lines.
+
+| Fixture | Emitted blocks compared | Result |
+| --- | ---: | --- |
+| first-child-core-events | 134 | identical |
+| arrakis-hook | 1 | identical |
+| position-unsubscriptions | 26 | identical |
+| position-subscription | 1 | identical |
+
+The comparison covered 162 emitted blocks and every supported event type, with
+no output differences.
