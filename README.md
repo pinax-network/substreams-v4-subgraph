@@ -28,6 +28,9 @@ stream, or alternate query service is not equivalent.
 - The native sink emits Graph Node v0.44 dump-compatible Arrow 58.3/Parquet
   58.3, temporal versions and clamps, table-local VIDs, metadata, graft
   pointers, and the deployment's exact legacy `Poi$` stream.
+- Resumable generation carries forward the generated active VIDs and POI seed,
+  appends atomic chunks/clamps to a native graft dump, and journals completed
+  tables with SHA-256 verification.
 - Module parameters reject any network, deployment, graft, address, or start
   block that differs from the pinned deployment.
 - Canonical Base receipt fixtures cover all seven event kinds, malformed logs,
@@ -84,12 +87,28 @@ Build and restore the bounded Graph Node-native Parquet proof fixture with the
 commands in [Graph Node-native Parquet](docs/native-parquet.md). The fixture is
 selective and is not a production replacement dump.
 
+Exercise a two-segment append, including an optional planned interruption:
+
+```bash
+STOP_AFTER_TABLES=7 make build-resumable-parquet-fixture \
+  OUTPUT=/tmp/uniswap-v4-resumable-dump
+```
+
 After restoring into the disposable Graph Node v0.44 oracle, compare every
 restored table with the paused source copy:
 
 ```bash
 export PINAX_API_KEY="$SUBSTREAMS_API_TOKEN"
 make verify-restored-parity LOCAL_SCHEMA=sgd3
+```
+
+Then prove Graph Node continuation, restart persistence, forced rewind, and
+deterministic replay against the same original deployment identity:
+
+```bash
+make verify-restored-lifecycle \
+  LOCAL_SCHEMA=sgd7 \
+  NAME=oracle/native-parquet-resume-script-1
 ```
 
 The committed receipt fixtures make tests network-independent. Refresh them
@@ -106,6 +125,7 @@ only when intentionally re-verifying the canonical Base blocks:
 - [state reducer architecture and validation](docs/state-reducer.md)
 - [Graph Node-native Parquet build and restore](docs/native-parquet.md)
 - [differential validation evidence and commands](docs/differential-validation.md)
+- [complete-history segmented backfill procedure](docs/production-backfill.md)
 - [pinned Base fixture ranges](fixtures/base-ranges.json)
 - [Graph Node reference oracle](oracle/README.md)
 

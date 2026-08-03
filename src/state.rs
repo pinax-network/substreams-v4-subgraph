@@ -103,6 +103,21 @@ impl EntityState {
             + self.arrakis_hooks.len()
     }
 
+    /// Retains only mutable mapping state needed by the next contiguous replay
+    /// segment. Historical changes and immutable rows already materialized to
+    /// Parquet must not grow the resume checkpoint indefinitely.
+    pub fn prepare_resume_checkpoint(&mut self) {
+        self.processed_blocks.clear();
+        self.transactions.clear();
+        self.swaps.clear();
+        self.modify_liquidities.clear();
+        self.subscriptions.clear();
+        self.unsubscriptions.clear();
+        self.transfers.clear();
+        self.changes.clear();
+        self.next_operation_index = 0;
+    }
+
     pub fn get(&self, entity_type: &str, id: &str) -> Option<EntityRecord> {
         match entity_type {
             "PoolManager" => self

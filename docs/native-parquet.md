@@ -39,6 +39,19 @@ The restore uses the original deployment ID, pauses it before the oracle starts,
 and asserts the exact head block, head hash, deployment, and indexing-error
 state through GraphQL.
 
+To rehearse replacement of an already registered copy of that same deployment,
+use Graph Node's replacement path rather than creating another logical target:
+
+```bash
+RESTORE_MODE=replace ./oracle/restore-native-fixture.sh \
+  /tmp/uniswap-v4-native-dump \
+  oracle/native-parquet-fixture-1
+```
+
+This invokes Graph Node v0.44's native `graphman restore --replace`; the
+deployment hash and GraphQL serving name remain unchanged while Graph Node
+recreates its physical deployment schema.
+
 Compare the restored PostgreSQL rows with the paused source copy:
 
 ```bash
@@ -58,6 +71,68 @@ When the paused source has indexed beyond the fixture checkpoint, a source
 version whose upper range is after the checkpoint is normalized to an open
 range. The restored database is paused exactly at the checkpoint, so its same
 version is correctly open there.
+
+## Resumable segmented generation
+
+The append path starts from a valid Graph Node-native dump and preserves its
+existing chunks. Each contiguous Substreams segment produces:
+
+- new entity and `Poi$` chunks;
+- clamps for active mutable versions from the prior segment;
+- a compact resume checkpoint containing only active mutable state, generated
+  table-local VIDs, and the latest POI digest;
+- an atomic `.substreams-append.json` journal while an append is incomplete.
+
+Completed files are never rewritten. The journal records their row counts and
+SHA-256 digests. `metadata.json` remains at the previous certified head until
+all 19 entity/POI tables complete, then it is replaced atomically and the
+journal is removed. Repeating a completed append is idempotent.
+
+Run the two-segment bounded proof:
+
+```bash
+export KUBECONFIG=/path/to/authorized-cluster.yaml
+export SUBSTREAMS_API_TOKEN=...
+STOP_AFTER_TABLES=7 ./scripts/build-resumable-parquet-fixture.sh \
+  /tmp/uniswap-v4-resumable-dump
+```
+
+The optional stop leaves seven completed tables on disk, then the same command
+continues from the journal. The certified fixture splits at block 26,990,350,
+resumes through 26,990,520 from the generated checkpoint, restores with the
+unmodified Graph Node v0.44 reader, and matches all 3,073 PostgreSQL rows in all
+20 physical tables.
+
+The next segment must always consume the previous generated checkpoint. A
+fresh SQL snapshot has Graph Node's source VIDs, which are not the generated
+dump's VIDs and would clamp the wrong rows after a segment boundary. The
+physical differential explicitly caught and rejects that invalid construction.
+
+After restoring the interrupted/resumed artifact, exercise the normal Graph
+Node writer and revert path:
+
+```bash
+export KUBECONFIG=/path/to/authorized-cluster.yaml
+export PINAX_API_KEY=...
+LIFECYCLE_REPORT=/tmp/v4-lifecycle.json \
+  ./oracle/verify-restored-lifecycle.sh \
+    sgd7 oracle/native-parquet-resume-script-1
+```
+
+The certifier processes the pinned next ten Base blocks with Graph Node v0.44,
+compares all 20 physical tables with the paused source, restarts Graph Node,
+rewinds every subsequent entity/POI row, and replays the range. Canonical
+GraphQL responses must remain byte-identical across restart, rewind, and replay.
+
+## Complete-history production shape
+
+A production artifact starts with a native `graphman dump` of the disposable
+child clone rewound to the inclusive graft block. That dump retains the large
+pre-graft mutable history and immutable rows without converting roughly 250 GB
+of PostgreSQL history through JSON. The reducer separately loads all active
+mutable rows at the graft checkpoint, then segmented Substreams append owns the
+entire child range. This combines native historical preservation with bounded
+resume checkpoints; it does not read or rewrite the live production schema.
 
 ## Scope boundary
 
