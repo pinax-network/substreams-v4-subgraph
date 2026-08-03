@@ -1,0 +1,28 @@
+name: parity
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run offline parity fixtures
+        run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/parity"
+      - name: Check formatting
+        run: cargo fmt --all --check
+      - name: Run strict lints
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+      - name: Upload parity report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: offline-parity-report
+          path: ${{ runner.temp }}/parity
+          if-no-files-found: error

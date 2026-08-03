@@ -75,12 +75,22 @@ The default oracle is `sgd1246` in `univ4base-postgres-0`, with the
 `graph-node-basegiant-0` Deployment paused. Override the Kubernetes, Postgres,
 schema, range, workload, or endpoint settings through the environment. The
 command verifies the exact deployment ID before reading, seeds state at block
-26,990,278, replays child blocks 26,990,279 through 26,990,520, and rejects both
-field mismatches and unexpected entity writes.
+26,990,278, replays child blocks 26,990,279 through 26,990,520, and rejects
+field mismatches, unexpected entity writes, write-order differences, and POI
+differences. Run all four pinned logical ranges with
+`make verify-all-state-ranges`.
 
 Build and restore the bounded Graph Node-native Parquet proof fixture with the
 commands in [Graph Node-native Parquet](docs/native-parquet.md). The fixture is
 selective and is not a production replacement dump.
+
+After restoring into the disposable Graph Node v0.44 oracle, compare every
+restored table with the paused source copy:
+
+```bash
+export PINAX_API_KEY="$SUBSTREAMS_API_TOKEN"
+make verify-restored-parity LOCAL_SCHEMA=sgd3
+```
 
 The committed receipt fixtures make tests network-independent. Refresh them
 only when intentionally re-verifying the canonical Base blocks:
@@ -95,6 +105,7 @@ only when intentionally re-verifying the canonical Base blocks:
 - [logical and physical parity contract](docs/parity-contract.md)
 - [state reducer architecture and validation](docs/state-reducer.md)
 - [Graph Node-native Parquet build and restore](docs/native-parquet.md)
+- [differential validation evidence and commands](docs/differential-validation.md)
 - [pinned Base fixture ranges](fixtures/base-ranges.json)
 - [Graph Node reference oracle](oracle/README.md)
 

@@ -45,6 +45,15 @@ FROM poi2$, params
 WHERE block_range @> seed_block
 ORDER BY id;
 
+WITH params AS (SELECT :end_block::integer AS end_block)
+SELECT jsonb_build_object('@poi_expected', jsonb_build_object(
+    'id', id,
+    'digest', digest
+))::text
+FROM poi2$, params
+WHERE block_range @> end_block
+ORDER BY id;
+
 WITH
 params AS (
     SELECT
@@ -326,17 +335,40 @@ records(phase, entity_type, id, data) AS (
     SELECT 1, 'Transfer', t.id, to_jsonb(t) - ARRAY['vid', 'block$']
     FROM transfer t, params WHERE t.block$ BETWEEN start_block AND end_block
 )
-SELECT (
-    CASE phase
-        WHEN 0 THEN jsonb_build_object(
-            '@seed_version', jsonb_build_object('entity_type', entity_type, 'data', data)
-        )
-        ELSE jsonb_build_object(
-            '@expected', jsonb_build_object('entity_type', entity_type, 'data', data)
-        )
-    END
-)::text
-FROM records
+SELECT payload::text
+FROM (
+    SELECT
+        phase,
+        entity_type,
+        id,
+        CASE phase
+            WHEN 0 THEN jsonb_build_object(
+                '@seed_version', jsonb_build_object('entity_type', entity_type, 'data', data)
+            )
+            ELSE jsonb_build_object(
+                '@expected', jsonb_build_object('entity_type', entity_type, 'data', data)
+            )
+        END AS payload
+    FROM records
+
+    UNION ALL
+
+    SELECT
+        2,
+        '',
+        '',
+        jsonb_build_object('@export_complete', jsonb_build_object(
+            'table_records', 19,
+            'poi_seed_records', (
+                SELECT count(*) FROM poi2$, params WHERE block_range @> seed_block
+            ),
+            'poi_expected_records', (
+                SELECT count(*) FROM poi2$, params WHERE block_range @> end_block
+            ),
+            'seed_records', (SELECT count(*) FROM records WHERE phase = 0),
+            'expected_records', (SELECT count(*) FROM records WHERE phase = 1)
+        ))
+) output
 ORDER BY phase, entity_type, id;
 
 COMMIT;

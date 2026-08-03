@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut seed_versions = Vec::new();
     let mut table_max_vids = std::collections::BTreeMap::new();
     let mut poi_seed = None;
+    let mut poi_expected = None;
     for line in io::stdin().lock().lines() {
         let line = line?;
         let Ok(value) = serde_json::from_str::<Value>(&line) else {
@@ -54,6 +55,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
             continue;
         }
+        if let Some(value) = value.get("@poi_expected") {
+            poi_expected = Some((
+                string_value(value, "id")?,
+                decode_bytea(&string_value(value, "digest")?, "digest")?,
+            ));
+            continue;
+        }
         if let Some(value) = value.get("@expected") {
             expected.push(record(value)?);
             continue;
@@ -74,9 +82,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             path,
             &ReplaySnapshot {
                 state: state.clone(),
-                seed_versions,
-                table_max_vids,
-                poi_seed,
+                seed_versions: seed_versions.clone(),
+                table_max_vids: table_max_vids.clone(),
+                poi_seed: poi_seed.clone(),
             },
         )?;
     }
@@ -84,6 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         serde_json::to_writer(io::stdout().lock(), &state)?;
     } else {
         let mut mismatches = Vec::new();
+        let poi_checked = poi_expected.is_some();
         let expected_keys = expected
             .iter()
             .map(|record| (record.entity_type(), record.id().to_owned()))
@@ -116,11 +125,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }));
             }
         }
+        if let Some((expected_id, expected_digest)) = poi_expected {
+            let poi_snapshot = ReplaySnapshot {
+                state: state.clone(),
+                seed_versions: seed_versions.clone(),
+                table_max_vids: table_max_vids.clone(),
+                poi_seed: poi_seed.clone(),
+            };
+            let actual = substreams_v4_subgraph::poi::digest_history(&poi_snapshot)?
+                .last()
+                .cloned();
+            if actual.as_ref().map(|poi| (&poi.id, &poi.digest))
+                != Some((&expected_id, &expected_digest))
+            {
+                mismatches.push(serde_json::json!({
+                    "kind": "poi_mismatch",
+                    "expected": {
+                        "id": expected_id,
+                        "digest": hex(&expected_digest),
+                    },
+                    "actual": actual.map(|poi| serde_json::json!({
+                        "id": poi.id,
+                        "digest": hex(&poi.digest),
+                    })),
+                }));
+            }
+        }
         serde_json::to_writer(
             io::stdout().lock(),
             &serde_json::json!({
                 "expected_entities": expected.len(),
                 "changed_entities": changed_keys.len(),
+                "poi_checked": poi_checked,
                 "mismatch_count": mismatches.len(),
                 "mismatches": mismatches,
             }),
@@ -130,6 +166,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     Ok(())
+}
+
+fn hex(value: &[u8]) -> String {
+    let mut output = String::with_capacity(value.len() * 2);
+    for byte in value {
+        use std::fmt::Write as _;
+        write!(&mut output, "{byte:02x}").expect("writing to a String is infallible");
+    }
+    output
 }
 
 fn snapshot_path() -> Result<Option<PathBuf>, String> {
@@ -404,7 +449,7 @@ fn event(value: &Value) -> Result<pb::Event, String> {
             timestamp_nanos: optional_i64(block, "timestampNanos")? as i32,
         }),
         transaction: Some(pb::TransactionRef {
-            index: u64_value(transaction, "index")? as u32,
+            index: optional_u64(transaction, "index")? as u32,
             hash: bytes(transaction, "hash")?,
             origin: bytes(transaction, "origin")?,
             to: bytes(transaction, "to")?,
@@ -412,10 +457,10 @@ fn event(value: &Value) -> Result<pb::Event, String> {
         }),
         log: Some(pb::LogRef {
             transaction_log_index: optional_u64(log, "transactionLogIndex")? as u32,
-            block_log_index: u64_value(log, "blockLogIndex")? as u32,
-            ordinal: u64_value(log, "ordinal")?,
+            block_log_index: optional_u64(log, "blockLogIndex")? as u32,
+            ordinal: optional_u64(log, "ordinal")?,
             address: bytes(log, "address")?,
-            graph_node_trigger_order: u64_value(log, "graphNodeTriggerOrder")?,
+            graph_node_trigger_order: optional_u64(log, "graphNodeTriggerOrder")?,
         }),
         source: pb::DataSource::Unspecified as i32,
         payload: Some(payload(value)?),
@@ -646,4 +691,16 @@ fn decode_bytea(value: &str, field: &str) -> Result<Vec<u8>, String> {
                 .map_err(|error| format!("invalid bytea `{field}`: {error}"))
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn omitted_protobuf_json_scalars_default_to_zero() {
+        let value = serde_json::json!({});
+        assert_eq!(optional_u64(&value, "index").unwrap(), 0);
+        assert_eq!(optional_i64(&value, "timestampNanos").unwrap(), 0);
+    }
 }
