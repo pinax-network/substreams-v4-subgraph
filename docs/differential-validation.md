@@ -85,3 +85,15 @@ the checkpoint and exactly what the restored, checkpoint-paused schema stores.
 Set `PARITY_REPORT=/absolute/path/report.json` to retain the physical comparison
 report. A mismatch report includes per-table counts and the first canonical row
 diff.
+
+The same Gate B command certified the interrupted/resumed two-segment artifact:
+20/20 tables and 3,073/3,073 rows matched after unmodified Graph Node v0.44
+restore. This also verifies that generated VIDs are carried across segment
+boundaries before Graph Node applies its documented restore-time renumbering.
+
+The lifecycle gate then lets the restored deployment's unmodified Graph Node
+v0.44 mapping process blocks 26,990,521 through 26,990,530. The certified run
+matched 20/20 tables and 569/569 rows, retained a byte-identical GraphQL result
+after restart, removed every later row on rewind, and reproduced the identical
+GraphQL and physical state on replay. Use `make verify-restored-lifecycle` to
+repeat this gate.

@@ -8,16 +8,24 @@ use substreams_v4_subgraph::{
     entities::*,
     pb::pinax::uniswap::v4::base::v1 as pb,
     snapshot::{PoiVersion, ReplaySnapshot, SeedVersion},
-    state::EntityState,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let snapshot_path = snapshot_path()?;
-    let mut state = EntityState::default();
+    let args = args()?;
+    let initial: ReplaySnapshot = match &args.input_snapshot {
+        Some(path) => serde_json::from_slice(&fs::read(path)?)?,
+        None => ReplaySnapshot::default(),
+    };
+    let mut initial = initial;
+    if let Some(path) = &args.supplement_seeds {
+        let supplemental: ReplaySnapshot = serde_json::from_slice(&fs::read(path)?)?;
+        initial.supplement_missing_seeds(&supplemental)?;
+    }
+    let mut state = initial.state;
     let mut expected = Vec::new();
-    let mut seed_versions = Vec::new();
-    let mut table_max_vids = std::collections::BTreeMap::new();
-    let mut poi_seed = None;
+    let mut seed_versions = initial.seed_versions;
+    let mut table_max_vids = initial.table_max_vids;
+    let mut poi_seed = initial.poi_seed;
     let mut poi_expected = None;
     for line in io::stdin().lock().lines() {
         let line = line?;
@@ -77,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             events: events.iter().map(event).collect::<Result<_, _>>()?,
         })?;
     }
-    if let Some(path) = snapshot_path {
+    if let Some(path) = args.output_snapshot {
         write_snapshot(
             path,
             &ReplaySnapshot {
@@ -177,20 +185,33 @@ fn hex(value: &[u8]) -> String {
     output
 }
 
-fn snapshot_path() -> Result<Option<PathBuf>, String> {
+struct Args {
+    input_snapshot: Option<PathBuf>,
+    output_snapshot: Option<PathBuf>,
+    supplement_seeds: Option<PathBuf>,
+}
+
+fn args() -> Result<Args, String> {
     let mut args = std::env::args_os().skip(1);
-    let mut path = None;
+    let mut input_snapshot = None;
+    let mut output_snapshot = None;
+    let mut supplement_seeds = None;
     while let Some(arg) = args.next() {
-        if arg == "--snapshot" {
-            let value = args
-                .next()
-                .ok_or_else(|| "--snapshot requires a path".to_owned())?;
-            path = Some(PathBuf::from(value));
-        } else {
-            return Err(format!("unknown argument `{}`", arg.to_string_lossy()));
+        let value = args
+            .next()
+            .ok_or_else(|| format!("{} requires a path", arg.to_string_lossy()))?;
+        match arg.to_string_lossy().as_ref() {
+            "--snapshot" => output_snapshot = Some(PathBuf::from(value)),
+            "--input-snapshot" => input_snapshot = Some(PathBuf::from(value)),
+            "--supplement-seeds" => supplement_seeds = Some(PathBuf::from(value)),
+            value => return Err(format!("unknown argument `{value}`")),
         }
     }
-    Ok(path)
+    Ok(Args {
+        input_snapshot,
+        output_snapshot,
+        supplement_seeds,
+    })
 }
 
 fn write_snapshot(path: PathBuf, snapshot: &ReplaySnapshot) -> Result<(), io::Error> {

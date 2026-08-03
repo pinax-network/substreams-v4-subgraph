@@ -1,0 +1,21 @@
+{
+  "format_version": 1,
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "seed_block": 26990278,
+  "segments": [
+    {
+      "start_block": 26990279,
+      "end_block": 26990350,
+      "end_hash": "0xb8d13db4420094cf2eaff377ec3dc03c16102300d188768409aec691996eb016"
+    },
+    {
+      "start_block": 26990351,
+      "end_block": 26990520,
+      "end_hash": "0xb8c62ea50f8abc85c14bfb970f79dd024e9dd5bce685ca1f1b5e4beddfbd8fd9"
+    }
+  ],
+  "lifecycle_target": {
+    "end_block": 26990530,
+    "end_hash": "0xcc6562b8b1ca3ef2d840a81a7bee3937ee2cbc42ba675ca22a7fa9e70fea189c"
+  }
+}

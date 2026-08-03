@@ -57,5 +57,16 @@ build-parquet-fixture:
 	@test -n "$(OUTPUT)" || (echo "set OUTPUT to a new dump directory" >&2; exit 1)
 	ENDPOINT=$(ENDPOINT) ./scripts/build-parquet-fixture.sh "$(OUTPUT)"
 
+.PHONY: build-resumable-parquet-fixture
+build-resumable-parquet-fixture:
+	@test -n "$(OUTPUT)" || (echo "set OUTPUT to a new dump directory" >&2; exit 1)
+	ENDPOINT=$(ENDPOINT) ./scripts/build-resumable-parquet-fixture.sh "$(OUTPUT)"
+
+.PHONY: verify-restored-lifecycle
+verify-restored-lifecycle:
+	@test -n "$(LOCAL_SCHEMA)" || (echo "set LOCAL_SCHEMA to the disposable restored schema" >&2; exit 1)
+	@test -n "$(NAME)" || (echo "set NAME to the disposable subgraph name" >&2; exit 1)
+	./oracle/verify-restored-lifecycle.sh "$(LOCAL_SCHEMA)" "$(NAME)"
+
 .PHONY: validate
 validate: check-generated test lint pack

@@ -121,6 +121,8 @@ for table in "${mutable_tables[@]}"; do
     ))::text"
     local_query="SELECT $canonical
                    FROM $local_schema.$quoted_table t
+                  WHERE (block_range @> $seed_block AND id IN ($seed_ids))
+                     OR lower(block_range) BETWEEN $start_block AND $end_block
                   ORDER BY lower(block_range), id;"
     source_query="SELECT $canonical
                     FROM $source_schema.$quoted_table t
@@ -134,6 +136,7 @@ for table in "${immutable_tables[@]}"; do
     quoted_table="\"$table\""
     local_query="SELECT (to_jsonb(t)-'vid')::text
                    FROM $local_schema.$quoted_table t
+                  WHERE \"block$\" BETWEEN $start_block AND $end_block
                   ORDER BY \"block$\", id;"
     source_query="SELECT (to_jsonb(t)-'vid')::text
                     FROM $source_schema.$quoted_table t

@@ -8,6 +8,7 @@ fi
 
 dump_dir=$(cd "$1" && pwd)
 name=${2:-oracle/native-parquet-fixture}
+restore_mode=${RESTORE_MODE:-force}
 oracle_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repository_root=$(cd "$oracle_root/.." && pwd)
 compose=(docker compose -f "$oracle_root/docker-compose.yml")
@@ -20,6 +21,11 @@ head_hash=$(jq -r '.child.end_hash' "$repository_root/fixtures/oracle-ranges.jso
 
 : "${PINAX_API_KEY:?set PINAX_API_KEY before starting the oracle}"
 
+if [[ "$restore_mode" != "force" && "$restore_mode" != "replace" ]]; then
+  echo "RESTORE_MODE must be force or replace" >&2
+  exit 1
+fi
+
 jq -e --arg deployment "$deployment" --argjson block "$head_block" --arg hash "${head_hash#0x}" '
   .version == 1
   and .deployment == $deployment
@@ -30,12 +36,17 @@ jq -e --arg deployment "$deployment" --argjson block "$head_block" --arg hash "$
 "${compose[@]}" stop graph-node
 restart_graph_node=true
 trap 'if [[ "$restart_graph_node" = true ]]; then "${compose[@]}" start graph-node >/dev/null; fi' EXIT
+if [[ "$restore_mode" = "replace" ]]; then
+  restore_commands="graphman --config /tmp/config.toml --node-id oracle restore /native-dump --shard primary --name '$name' --replace"
+else
+  restore_commands="graphman --config /tmp/config.toml --node-id oracle create '$name'
+   graphman --config /tmp/config.toml --node-id oracle restore /native-dump --shard primary --name '$name' --force"
+fi
 "${compose[@]}" run --rm --no-deps -T \
   --volume "$dump_dir:/native-dump:ro" \
   --entrypoint /bin/sh graph-node -ec \
   "envsubst < /config/config.toml.template > /tmp/config.toml
-   graphman --config /tmp/config.toml --node-id oracle create '$name'
-   graphman --config /tmp/config.toml --node-id oracle restore /native-dump --shard primary --name '$name' --force
+   $restore_commands
    graphman --config /tmp/config.toml --node-id oracle pause '$deployment'"
 "${compose[@]}" start graph-node
 restart_graph_node=false
