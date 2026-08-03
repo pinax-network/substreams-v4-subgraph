@@ -12,7 +12,7 @@ jobs:
   offline-parity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run offline parity fixtures
         run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/parity"
       - name: Check formatting
@@ -21,7 +21,7 @@ jobs:
         run: cargo clippy --locked --all-targets --all-features -- -D warnings
       - name: Upload parity report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: offline-parity-report
           path: ${{ runner.temp }}/parity
