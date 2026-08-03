@@ -15,9 +15,10 @@ compose=(docker compose -f "$oracle_root/docker-compose.yml")
 graphql_port=${ORACLE_GRAPHQL_PORT:-18100}
 status_port=${ORACLE_STATUS_PORT:-18130}
 metadata=$dump_dir/metadata.json
-deployment=$(jq -r '.child.deployment' "$repository_root/fixtures/oracle-ranges.json")
-head_block=$(jq -r '.child.end_block' "$repository_root/fixtures/oracle-ranges.json")
-head_hash=$(jq -r '.child.end_hash' "$repository_root/fixtures/oracle-ranges.json")
+deployment=Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB
+head_block=$(jq -er '.head_block.number' "$metadata")
+head_hash=$(jq -er '.head_block.hash' "$metadata")
+head_hash=0x${head_hash#0x}
 
 : "${PINAX_API_KEY:?set PINAX_API_KEY before starting the oracle}"
 
@@ -29,9 +30,14 @@ fi
 jq -e --arg deployment "$deployment" --argjson block "$head_block" --arg hash "${head_hash#0x}" '
   .version == 1
   and .deployment == $deployment
+  and .network == "base"
   and .head_block.number == $block
   and .head_block.hash == $hash
 ' "$metadata" >/dev/null
+cmp -s "$dump_dir/schema.graphql" \
+  "$repository_root/artifacts/deployment/$deployment/schema.graphql"
+cmp -s "$dump_dir/subgraph.yaml" \
+  "$repository_root/artifacts/deployment/$deployment/subgraph.yaml"
 
 "${compose[@]}" stop graph-node
 restart_graph_node=true
@@ -48,8 +54,30 @@ fi
   "envsubst < /config/config.toml.template > /tmp/config.toml
    $restore_commands
    graphman --config /tmp/config.toml --node-id oracle pause '$deployment'"
-"${compose[@]}" start graph-node
+# Once replacement succeeds, any later certification failure must leave the
+# writer stopped for inspection instead of automatically starting it.
 restart_graph_node=false
+
+restored_schema=$("${compose[@]}" exec -T postgres \
+  psql -U graph -d graph -AtX -v ON_ERROR_STOP=1 \
+  -c "SELECT name FROM deployment_schemas WHERE subgraph = '$deployment';")
+if [[ ! "$restored_schema" =~ ^sgd[0-9]+$ ]]; then
+  echo "could not resolve restored deployment schema: '$restored_schema'" >&2
+  exit 1
+fi
+sequence_audit=$("${compose[@]}" exec -T postgres \
+  psql -U graph -d graph -AtX -v ON_ERROR_STOP=1 \
+  -v target_schema="$restored_schema" \
+  < "$repository_root/scripts/reconcile-vid-sequences.sql")
+expected_sequence_count=$(jq -er '.tables | length' "$metadata")
+valid_sequence_count=$(grep -Ec '^[^|]+\|[0-9]+\|[0-9]+\|[tf]\|t$' <<<"$sequence_audit" || true)
+if grep -Eq '\|f$' <<<"$sequence_audit" || \
+  (( valid_sequence_count != expected_sequence_count )); then
+  echo "restored VID sequence reconciliation failed" >&2
+  printf '%s\n' "$sequence_audit" >&2
+  exit 1
+fi
+"${compose[@]}" start graph-node
 
 deadline=$((SECONDS + 120))
 until curl -fsS "http://127.0.0.1:$status_port/" >/dev/null 2>&1; do
@@ -71,4 +99,4 @@ jq -e --arg deployment "$deployment" --argjson block "$head_block" --arg hash "$
   and .data._meta.hasIndexingErrors == false
 ' <<<"$response" >/dev/null
 
-echo "$deployment restored from native Parquet and paused at $head_block ($head_hash)"
+echo "$deployment restored from native Parquet in $restored_schema, VID sequences reconciled, and paused at $head_block ($head_hash)"

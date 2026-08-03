@@ -20,9 +20,14 @@ seed_block=${SEED_BLOCK:-26990278}
 start_block=${START_BLOCK:-26990279}
 end_block=${END_BLOCK:-26990520}
 stop_block=$((end_block + 1))
+include_table_max=${INCLUDE_TABLE_MAX:-1}
 
 if [[ ! "$schema" =~ ^sgd[0-9]+$ ]]; then
     echo "GRAPH_SCHEMA must match sgd followed by digits" >&2
+    exit 1
+fi
+if [[ "$include_table_max" != "0" && "$include_table_max" != "1" ]]; then
+    echo "INCLUDE_TABLE_MAX must be 0 or 1" >&2
     exit 1
 fi
 
@@ -52,17 +57,23 @@ if [[ -n "${SNAPSHOT_OUTPUT:-}" ]]; then
 fi
 
 oracle_export=$(mktemp /tmp/substreams-v4-oracle-export.XXXXXX)
-trap 'rm -f "$oracle_export"' EXIT
+oracle_export_compressed=$(mktemp /tmp/substreams-v4-oracle-export-gz.XXXXXX)
+trap 'rm -f "$oracle_export" "$oracle_export_compressed"' EXIT
 export_complete=0
 for attempt in 1 2 3; do
     : > "$oracle_export"
+    : > "$oracle_export_compressed"
     if kubectl -n "$kube_namespace" exec -i "$postgres_pod" -- \
-        psql -U "$postgres_user" -d "$postgres_db" -AtX -v ON_ERROR_STOP=1 \
-        -v schema="$schema" \
-        -v seed_block="$seed_block" \
-        -v start_block="$start_block" \
-        -v end_block="$end_block" \
-        < scripts/export-state-parity.sql > "$oracle_export" && \
+        sh -c '
+            psql -U "$1" -d "$2" -AtX -v ON_ERROR_STOP=1 \
+                -v "schema=$3" -v "seed_block=$4" -v "start_block=$5" -v "end_block=$6" \
+                -v "include_table_max=$7" \
+                | gzip -1
+        ' sh "$postgres_user" "$postgres_db" "$schema" \
+        "$seed_block" "$start_block" "$end_block" "$include_table_max" \
+        < scripts/export-state-parity.sql > "$oracle_export_compressed" && \
+        gzip -t "$oracle_export_compressed" && \
+        gzip -dc "$oracle_export_compressed" > "$oracle_export" && \
         jq -Rse '
             split("\n") | map(fromjson? | select(. != null)) as $rows |
             ($rows | map(select(has("@export_complete"))) | last."@export_complete") as $manifest |

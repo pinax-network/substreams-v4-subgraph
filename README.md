@@ -39,6 +39,27 @@ stream, or alternate query service is not equivalent.
 Parquet production remains isolated from trigger extraction and entity
 semantics so physical dump concerns cannot change the deterministic reducer.
 
+## Prototype status
+
+Both prototype gates are certified end to end on the original deployment
+identity. The logical gate has zero entity or POI differences at every pinned
+checkpoint. The 100,000-block physical gate restored 1,155,270 rows through
+unmodified Graph Node v0.44 and matched all 20 PostgreSQL tables. Graph Node
+then continued for 1,000 requested blocks, matched all 10,366 changed-range
+rows, survived restart, and rewound byte-identically to the Parquet seed.
+Replacing that advanced disposable copy with the preserved checkpoint also
+returned byte-identically with 20/20 valid table sequences.
+
+The measured cached historical pipeline runs at 203.0 blocks/s before the
+one-time restore, and repeated restored Graph Node continuations reached
+27.8–31.25 requested blocks/s, both comfortably above Base's sampled 0.5 blocks/s arrival
+rate. See the [100k benchmark](docs/benchmark-100k.md) for stage timings,
+resource use, storage projections, and the production-hardening decision.
+
+No production replacement was performed. Live `sgd1246` remains outside this
+prototype's mutation scope until the separately approved backup and cutover
+gates in the runbook are satisfied.
+
 ## Build and validate
 
 The repository pins Rust 1.90.0 and all direct Rust dependencies. From a clean
@@ -66,7 +87,7 @@ Override `ENDPOINT`, `START_BLOCK`, or `STOP_BLOCK` as needed. The defaults are
 
 The first post-graft entity differential uses only targeted, read-only versions
 from a paused Graph Node database copy. It refuses to run while that copy's
-Graph Node StatefulSet has any replicas:
+Graph Node writer workload has any replicas:
 
 ```bash
 export KUBECONFIG=/path/to/authorized-cluster.yaml
@@ -126,6 +147,7 @@ only when intentionally re-verifying the canonical Base blocks:
 - [Graph Node-native Parquet build and restore](docs/native-parquet.md)
 - [differential validation evidence and commands](docs/differential-validation.md)
 - [complete-history segmented backfill procedure](docs/production-backfill.md)
+- [100k-block Base giant benchmark and decision](docs/benchmark-100k.md)
 - [pinned Base fixture ranges](fixtures/base-ranges.json)
 - [Graph Node reference oracle](oracle/README.md)
 

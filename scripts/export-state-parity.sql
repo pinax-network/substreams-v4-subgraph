@@ -8,31 +8,37 @@ SET LOCAL statement_timeout = '5min';
 SET LOCAL lock_timeout = '5s';
 SET LOCAL search_path = :"schema", public;
 
+\if :include_table_max
+-- The differential fixture retains only active mutable seed rows. Its VID
+-- allocation domain therefore starts at those rows' maxima; omitted immutable
+-- history starts at -1. Production retained-history generation instead takes
+-- exact per-table maxima from the native graft dump in capture-active-seed.sh.
 WITH params AS (SELECT :seed_block::integer AS seed_block), table_max(entity_type, max_vid) AS (
-    SELECT 'PoolManager', coalesce(max(vid), -1) FROM pool_manager, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Bundle', coalesce(max(vid), -1) FROM bundle, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Token', coalesce(max(vid), -1) FROM token, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Pool', coalesce(max(vid), -1) FROM pool, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Tick', coalesce(max(vid), -1) FROM tick, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'UniswapDayData', coalesce(max(vid), -1) FROM uniswap_day_data, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'PoolDayData', coalesce(max(vid), -1) FROM pool_day_data, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'PoolHourData', coalesce(max(vid), -1) FROM pool_hour_data, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'TokenDayData', coalesce(max(vid), -1) FROM token_day_data, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'TokenHourData', coalesce(max(vid), -1) FROM token_hour_data, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Position', coalesce(max(vid), -1) FROM position, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'ArrakisHook', coalesce(max(vid), -1) FROM arrakis_hook, params WHERE lower(block_range) <= seed_block
-    UNION ALL SELECT 'Transaction', coalesce(max(vid), -1) FROM transaction, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'Swap', coalesce(max(vid), -1) FROM swap, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'ModifyLiquidity', coalesce(max(vid), -1) FROM modify_liquidity, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'Subscribe', coalesce(max(vid), -1) FROM subscribe, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'Unsubscribe', coalesce(max(vid), -1) FROM unsubscribe, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'Transfer', coalesce(max(vid), -1) FROM transfer, params WHERE block$ <= seed_block
-    UNION ALL SELECT 'Poi$', coalesce(max(vid), -1) FROM poi2$, params WHERE lower(block_range) <= seed_block
+    SELECT 'PoolManager', coalesce(max(vid), -1) FROM pool_manager, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Bundle', coalesce(max(vid), -1) FROM bundle, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Token', coalesce(max(vid), -1) FROM token, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Pool', coalesce(max(vid), -1) FROM pool, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Tick', coalesce(max(vid), -1) FROM tick, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'UniswapDayData', coalesce(max(vid), -1) FROM uniswap_day_data, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'PoolDayData', coalesce(max(vid), -1) FROM pool_day_data, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'PoolHourData', coalesce(max(vid), -1) FROM pool_hour_data, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'TokenDayData', coalesce(max(vid), -1) FROM token_day_data, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'TokenHourData', coalesce(max(vid), -1) FROM token_hour_data, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Position', coalesce(max(vid), -1) FROM position, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'ArrakisHook', coalesce(max(vid), -1) FROM arrakis_hook, params WHERE block_range @> seed_block
+    UNION ALL SELECT 'Transaction', -1
+    UNION ALL SELECT 'Swap', -1
+    UNION ALL SELECT 'ModifyLiquidity', -1
+    UNION ALL SELECT 'Subscribe', -1
+    UNION ALL SELECT 'Unsubscribe', -1
+    UNION ALL SELECT 'Transfer', -1
+    UNION ALL SELECT 'Poi$', coalesce(max(vid), -1) FROM poi2$, params WHERE block_range @> seed_block
 )
 SELECT jsonb_build_object(
     '@table', jsonb_build_object('entity_type', entity_type, 'max_vid', max_vid)
 )::text
 FROM table_max ORDER BY entity_type;
+\endif
 
 WITH params AS (SELECT :seed_block::integer AS seed_block)
 SELECT jsonb_build_object('@poi_seed', jsonb_build_object(
@@ -358,7 +364,7 @@ FROM (
         '',
         '',
         jsonb_build_object('@export_complete', jsonb_build_object(
-            'table_records', 19,
+            'table_records', CASE WHEN :include_table_max::integer = 1 THEN 19 ELSE 0 END,
             'poi_seed_records', (
                 SELECT count(*) FROM poi2$, params WHERE block_range @> seed_block
             ),
