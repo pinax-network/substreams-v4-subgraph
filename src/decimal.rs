@@ -66,6 +66,16 @@ impl GraphDecimal {
             .expect("normalization retains at least one base-10 digit");
         Self(OldBigDecimal::new(integer, exp - trailing as i64))
     }
+
+    fn wasm_result(value: OldBigDecimal) -> Self {
+        // Graph Node normalizes once in the host arithmetic operation and a
+        // second time when the returned AscBigDecimal crosses the WASM ABI for
+        // its next operation or store.set. bigdecimal 0.1.2's with_prec is not
+        // idempotent at every negative 34-digit boundary, so this round-trip is
+        // observable in the deployed mapping's persisted values and POI.
+        let host_result = Self::normalized(value);
+        Self::normalized(host_result.0)
+    }
 }
 
 impl Default for GraphDecimal {
@@ -131,7 +141,7 @@ macro_rules! arithmetic {
             type Output = Self;
 
             fn $method(self, rhs: Self) -> Self::Output {
-                Self::normalized(self.0.$method(rhs.0))
+                Self::wasm_result(self.0.$method(rhs.0))
             }
         }
     };
@@ -146,7 +156,7 @@ impl ops::Div for GraphDecimal {
 
     fn div(self, rhs: Self) -> Self::Output {
         assert!(!rhs.is_zero(), "Cannot divide by zero-valued BigDecimal!");
-        Self::normalized(self.0.div(rhs.0))
+        Self::wasm_result(self.0.div(rhs.0))
     }
 }
 
@@ -173,5 +183,16 @@ mod tests {
         let a: GraphDecimal = "99999999999999999999999999999999999".parse().unwrap();
         assert_eq!(a.to_string(), "100000000000000000000000000000000000");
         assert_eq!((a.clone() + GraphDecimal::one()).to_string(), a.to_string());
+    }
+
+    #[test]
+    fn matches_wasm_abi_renormalization_boundary() {
+        let tvl: GraphDecimal = "-1958.23222".parse().unwrap();
+        let derived: GraphDecimal = "0.000443428497055167816687599679621575".parse().unwrap();
+        let eth_usd: GraphDecimal = "2255.190161262956454194198227130777".parse().unwrap();
+        assert_eq!(
+            (tvl * derived * eth_usd).to_string(),
+            "-1958.2627366648723548155211868460794"
+        );
     }
 }

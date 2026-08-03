@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "network": "base",
+  "seed_block": 26990278,
+  "seed_hash": "0x3365afb2ec41d64886321de82b8fd73427fda55fcf731bf5a2888c1a2a2c8948",
+  "segments": [
+    {
+      "start_block": 26990279,
+      "end_block": 27040278,
+      "end_hash": "0x2b9c948c7e3f672a6303428c2872e33057de1bb609b01509b872f5a6a876af26"
+    },
+    {
+      "start_block": 27040279,
+      "end_block": 27090278,
+      "end_hash": "0x2e8452649a968006c58e7530d5e1ac054ae1f30383484d4736cea0edfd84b8ad"
+    }
+  ],
+  "total_blocks": 100000,
+  "graph_node_continuation": {
+    "start_block": 27090279,
+    "end_block": 27091278,
+    "end_hash": "0xc61727c87bb1337c0d77337d8d7130bdf8ce421fc1349c782e0abea88e707794"
+  }
+}

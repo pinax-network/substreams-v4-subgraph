@@ -50,7 +50,10 @@ RESTORE_MODE=replace ./oracle/restore-native-fixture.sh \
 
 This invokes Graph Node v0.44's native `graphman restore --replace`; the
 deployment hash and GraphQL serving name remain unchanged while Graph Node
-recreates its physical deployment schema.
+recreates its physical deployment schema. The wrapper then reconciles every
+per-table `vid` sequence to the restored maximum before Graph Node starts.
+This is required because `restore --replace` can retain a sequence position
+from the replaced schema even though the restored table rows were renumbered.
 
 Compare the restored PostgreSQL rows with the paused source copy:
 
@@ -61,11 +64,13 @@ make verify-restored-parity LOCAL_SCHEMA=sgd3
 ```
 
 The comparison covers all 19 entity/POI tables plus `data_sources$`. It removes
-only `vid`, because Graph Node v0.44 itself ignores supplied dump VIDs and
-allocates new per-table VIDs when restoring this deployment's legacy
-`specVersion: 0.0.4` schema. This is a proven Graph Node restore invariant, not
-a comparator tolerance: VIDs are internal, are not GraphQL-visible, and the
-writer still uses deterministic VIDs for chunk ordering and resumable output.
+only `vid`, because Graph Node v0.44 itself renumbers dump rows when restoring
+this deployment's legacy `specVersion: 0.0.4` schema. This is a proven Graph
+Node restore invariant, not a comparator tolerance: VIDs are internal, are not
+GraphQL-visible, and the writer still uses deterministic VIDs for chunk
+ordering and resumable output. The restore wrapper separately verifies that
+each resulting sequence is positioned at its table's maximum, which protects
+the first normal Graph Node write after replacement.
 
 When the paused source has indexed beyond the fixture checkpoint, a source
 version whose upper range is after the checkpoint is normalized to an open

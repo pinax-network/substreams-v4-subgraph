@@ -51,7 +51,8 @@ cargo build --locked --features native --bin state-replay --bin parquet-backfill
 target/debug/state-replay \
     --input-snapshot "$first_snapshot" \
     --supplement-seeds "$second_oracle" \
-    --snapshot "$first_supplemented" </dev/null >/dev/null
+    --snapshot "$first_supplemented" \
+    --quiet </dev/null
 target/debug/parquet-backfill \
     --snapshot "$first_supplemented" \
     --output "$output" \
@@ -64,7 +65,8 @@ substreams run -e "$endpoint" substreams.yaml map_events \
     -s "$second_start" -t "$((second_end + 1))" -o jsonl \
     | target/debug/state-replay \
         --input-snapshot "$first_checkpoint" \
-        --snapshot "$second_resumed" >/dev/null
+        --snapshot "$second_resumed" \
+        --quiet
 
 planned_stop=false
 if [[ -n "${STOP_AFTER_TABLES:-}" ]]; then

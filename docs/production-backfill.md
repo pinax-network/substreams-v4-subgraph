@@ -33,10 +33,12 @@ export KUBECONFIG=/path/to/authorized-cluster.yaml
 ```
 
 The command verifies deployment identity, the stopped workload, exact pinned
-schema/manifest, and the dump's graft head. A repeatable-read, read-only SQL
-transaction exports every mutable entity active at the graft block plus the
-active POI. The dump's own per-table max VIDs are used. An exact-count trailer
-detects and retries incomplete Kubernetes transport streams.
+schema/manifest, and the dump's graft head. Read-only SQL exports every mutable
+entity active at the graft block plus the active POI. The enforced stopped
+writer keeps the source stable across pages, and the dump's own per-table max
+VIDs are used. Mutable rows are keyset-paged by VID with a bounded per-page
+count manifest and three transport retries; no monolithic Kubernetes stream is
+trusted or retained.
 
 Expected active-state scale from the approved source is about 235,000 rows,
 dominated by `PoolHourData` and `TokenHourData`; immutable rows remain only in
@@ -99,12 +101,22 @@ RESTORE_MODE=replace ./oracle/restore-native-fixture.sh \
   oracle/native-parquet-fixture-1
 ```
 
+The replacement wrapper keeps Graph Node stopped while it reconciles each
+per-table `vid` sequence to the restored table maximum and fails if the audit
+does not pass. This is part of the atomic restore gate: do not resume a normal
+Graph Node writer after `restore --replace` without it.
+
 Run `verify-restored-parity.sh` followed by
 `verify-restored-lifecycle.sh`. Preserve both the pre-replacement database
 snapshot and immutable native dump. Rehearse rollback by stopping the sole
 writer and restoring the preserved dump with `graphman restore --replace`, then
 require the same metadata, GraphQL, POI, and physical gates before reopening
 query traffic.
+
+The certified disposable rehearsal advanced the restored deployment by 1,000
+requested blocks, then applied the preserved checkpoint through
+`restore --replace`. It returned to the exact prior head/hash and byte-identical
+GraphQL snapshot with healthy status and 20/20 valid VID sequences.
 
 For a production cutover, first record an explicit approval, exact target
 shard/schema, stopped writer and query assignments, backup identifiers, and

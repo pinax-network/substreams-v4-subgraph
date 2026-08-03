@@ -27,6 +27,10 @@ metadata, POI seed/checkpoint rows, seed versions, and expected rows. A partial
 Substreams replay; transport truncation can therefore never appear as a parity
 result.
 
+For value/POI-only historical samples, set `INCLUDE_TABLE_MAX=0` to avoid the
+unrelated scan for Parquet VID allocation metadata. Leave the default enabled
+when `SNAPSHOT_OUTPUT` will seed a generated dump.
+
 The certified 2026-08-02 run is:
 
 | Range | Blocks | Expected/changed entity writes | Differences |
@@ -62,14 +66,18 @@ The certified bounded restore compared 3,073 rows in all 20 physical tables:
 `data_sources$`. Every canonical row matched. The comparison uses PostgreSQL's
 own `jsonb` rendering, so bytea, numeric, arrays, nulls, columns, temporal
 ranges, and immutable block values are checked in their actual storage types.
+Production rows are keyset-paged by VID, gzip-verified, and retried per page so
+a large comparison cannot be accepted after a truncated Kubernetes stream.
 
 ### Explicit VID invariant
 
 The sole excluded column is `vid`. Graph Node v0.44's own `graphman restore`
-path does not insert dump VIDs for this deployment's legacy
-`specVersion: 0.0.4` schema; it allocates each table's database sequence during
-restore. Therefore even a Graph Node-produced dump is renumbered when restored
-into a fresh schema. VIDs are internal surrogate keys and are not query-visible.
+path does not preserve dump VIDs for this deployment's legacy
+`specVersion: 0.0.4` schema. Therefore even a Graph Node-produced dump is
+renumbered when restored. VIDs are internal surrogate keys and are not
+query-visible. After `restore --replace`, the wrapper reconciles and audits
+every per-table sequence against the resulting maximum VID before Graph Node
+starts; this prevents a retained sequence from colliding on continuation.
 The Parquet writer nevertheless assigns stable table-local VIDs because Graph
 Node requires them for chunk order and they provide deterministic resume
 boundaries. No entity field, version order, range, POI value, or GraphQL result
@@ -85,6 +93,13 @@ the checkpoint and exactly what the restored, checkpoint-paused schema stores.
 Set `PARITY_REPORT=/absolute/path/report.json` to retain the physical comparison
 report. A mismatch report includes per-table counts and the first canonical row
 diff.
+
+For a post-restore continuation check on a complete checkpoint, set
+`SEED_ID_SCOPE=changed`. The comparator then includes the seed version and
+every range version of each changed ID, all newly created mutable rows, all
+immutable events, and POI, without re-transferring the already-certified
+complete seed.
+The exhaustive checkpoint gate itself must still use `FULL_SEED=1`.
 
 The same Gate B command certified the interrupted/resumed two-segment artifact:
 20/20 tables and 3,073/3,073 rows matched after unmodified Graph Node v0.44

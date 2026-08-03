@@ -42,7 +42,8 @@ substreams run -e "$endpoint" substreams.yaml map_events \
     -s "$start_block" -t "$((end_block + 1))" -o jsonl \
     | target/debug/state-replay \
         --input-snapshot "$input_checkpoint" \
-        --snapshot "$segment_snapshot" >/dev/null
+        --snapshot "$segment_snapshot" \
+        --quiet
 target/debug/parquet-backfill \
     --snapshot "$segment_snapshot" \
     --output "$dump_dir" \

@@ -96,9 +96,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         )?;
     }
-    if expected.is_empty() {
+    if expected.is_empty() && !args.quiet {
         serde_json::to_writer(io::stdout().lock(), &state)?;
-    } else {
+    } else if !expected.is_empty() {
         let mut mismatches = Vec::new();
         let poi_checked = poi_expected.is_some();
         let expected_keys = expected
@@ -189,6 +189,7 @@ struct Args {
     input_snapshot: Option<PathBuf>,
     output_snapshot: Option<PathBuf>,
     supplement_seeds: Option<PathBuf>,
+    quiet: bool,
 }
 
 fn args() -> Result<Args, String> {
@@ -196,7 +197,12 @@ fn args() -> Result<Args, String> {
     let mut input_snapshot = None;
     let mut output_snapshot = None;
     let mut supplement_seeds = None;
+    let mut quiet = false;
     while let Some(arg) = args.next() {
+        if arg == "--quiet" {
+            quiet = true;
+            continue;
+        }
         let value = args
             .next()
             .ok_or_else(|| format!("{} requires a path", arg.to_string_lossy()))?;
@@ -211,6 +217,7 @@ fn args() -> Result<Args, String> {
         input_snapshot,
         output_snapshot,
         supplement_seeds,
+        quiet,
     })
 }
 
@@ -717,6 +724,16 @@ fn decode_bytea(value: &str, field: &str) -> Result<Vec<u8>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preserves_arbitrary_precision_bigint_json_numbers() {
+        let value: Value =
+            serde_json::from_str(r#"{"total_supply":100000000000000000000000000000}"#).unwrap();
+        assert_eq!(
+            bigint(&value, "total_supply").unwrap().to_string(),
+            "100000000000000000000000000000"
+        );
+    }
 
     #[test]
     fn omitted_protobuf_json_scalars_default_to_zero() {
