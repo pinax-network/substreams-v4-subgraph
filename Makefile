@@ -43,6 +43,15 @@ verify-live: build
 verify-state-parity:
 	ENDPOINT=$(ENDPOINT) ./scripts/verify-state-parity.sh
 
+.PHONY: verify-all-state-ranges
+verify-all-state-ranges:
+	ENDPOINT=$(ENDPOINT) ./scripts/verify-all-state-ranges.sh
+
+.PHONY: verify-restored-parity
+verify-restored-parity:
+	@test -n "$(LOCAL_SCHEMA)" || (echo "set LOCAL_SCHEMA to the disposable restored schema" >&2; exit 1)
+	./scripts/verify-restored-parity.sh "$(LOCAL_SCHEMA)"
+
 .PHONY: build-parquet-fixture
 build-parquet-fixture:
 	@test -n "$(OUTPUT)" || (echo "set OUTPUT to a new dump directory" >&2; exit 1)

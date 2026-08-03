@@ -42,26 +42,54 @@ if [[ "$actual_deployment" != "$deployment" ]]; then
     exit 1
 fi
 
-cargo build --locked --target wasm32-unknown-unknown --release
-cargo build --locked --features native --bin state-replay
-replay_args=()
+if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
+    cargo build --locked --target wasm32-unknown-unknown --release
+    cargo build --locked --features native --bin state-replay
+fi
+replay_command=(target/debug/state-replay)
 if [[ -n "${SNAPSHOT_OUTPUT:-}" ]]; then
-    replay_args=(--snapshot "$SNAPSHOT_OUTPUT")
+    replay_command+=(--snapshot "$SNAPSHOT_OUTPUT")
+fi
+
+oracle_export=$(mktemp /tmp/substreams-v4-oracle-export.XXXXXX)
+trap 'rm -f "$oracle_export"' EXIT
+export_complete=0
+for attempt in 1 2 3; do
+    : > "$oracle_export"
+    if kubectl -n "$kube_namespace" exec -i "$postgres_pod" -- \
+        psql -U "$postgres_user" -d "$postgres_db" -AtX -v ON_ERROR_STOP=1 \
+        -v schema="$schema" \
+        -v seed_block="$seed_block" \
+        -v start_block="$start_block" \
+        -v end_block="$end_block" \
+        < scripts/export-state-parity.sql > "$oracle_export" && \
+        jq -Rse '
+            split("\n") | map(fromjson? | select(. != null)) as $rows |
+            ($rows | map(select(has("@export_complete"))) | last."@export_complete") as $manifest |
+            $manifest != null and
+            ([$rows[] | select(has("@table"))] | length) == $manifest.table_records and
+            ([$rows[] | select(has("@poi_seed"))] | length) == $manifest.poi_seed_records and
+            ([$rows[] | select(has("@poi_expected"))] | length) == $manifest.poi_expected_records and
+            ([$rows[] | select(has("@seed_version"))] | length) == $manifest.seed_records and
+            ([$rows[] | select(has("@expected"))] | length) == $manifest.expected_records
+        ' "$oracle_export" >/dev/null; then
+        export_complete=1
+        break
+    fi
+    echo "oracle export attempt $attempt was incomplete" >&2
+done
+if (( export_complete == 0 )); then
+    echo "oracle export failed its completeness manifest after 3 attempts" >&2
+    exit 1
 fi
 
 set +e
 result=$(
     {
-        kubectl -n "$kube_namespace" exec -i "$postgres_pod" -- \
-            psql -U "$postgres_user" -d "$postgres_db" -AtX -v ON_ERROR_STOP=1 \
-            -v schema="$schema" \
-            -v seed_block="$seed_block" \
-            -v start_block="$start_block" \
-            -v end_block="$end_block" \
-            < scripts/export-state-parity.sql
+        cat "$oracle_export"
         substreams run -e "$endpoint" substreams.yaml map_events \
             -s "$start_block" -t "$stop_block" -o jsonl
-    } | target/debug/state-replay "${replay_args[@]}"
+    } | "${replay_command[@]}"
 )
 replay_status=$?
 set -e
@@ -72,6 +100,7 @@ if ((replay_status != 0)); then
 fi
 printf '%s\n' "$result" | jq -e '
     .mismatch_count == 0 and
+    .poi_checked == true and
     .expected_entities == .changed_entities and
     .expected_entities > 0
 ' >/dev/null

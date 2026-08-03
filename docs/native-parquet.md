@@ -39,6 +39,26 @@ The restore uses the original deployment ID, pauses it before the oracle starts,
 and asserts the exact head block, head hash, deployment, and indexing-error
 state through GraphQL.
 
+Compare the restored PostgreSQL rows with the paused source copy:
+
+```bash
+export KUBECONFIG=/path/to/authorized-cluster.yaml
+export PINAX_API_KEY=...
+make verify-restored-parity LOCAL_SCHEMA=sgd3
+```
+
+The comparison covers all 19 entity/POI tables plus `data_sources$`. It removes
+only `vid`, because Graph Node v0.44 itself ignores supplied dump VIDs and
+allocates new per-table VIDs when restoring this deployment's legacy
+`specVersion: 0.0.4` schema. This is a proven Graph Node restore invariant, not
+a comparator tolerance: VIDs are internal, are not GraphQL-visible, and the
+writer still uses deterministic VIDs for chunk ordering and resumable output.
+
+When the paused source has indexed beyond the fixture checkpoint, a source
+version whose upper range is after the checkpoint is normalized to an open
+range. The restored database is paused exactly at the checkpoint, so its same
+version is correctly open there.
+
 ## Scope boundary
 
 This fixture proves native dump compatibility and exact results for the bounded
