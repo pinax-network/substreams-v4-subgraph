@@ -1,7 +1,7 @@
 specVersion: v0.1.0
 package:
   name: uniswap_v4_base_backfill
-  version: v0.1.0
+  version: v0.1.1
   url: https://github.com/pinax-network/substreams-v4-subgraph
   description: Exact deployed-event stream for the Base Uniswap v4 Graph Node backfill
 

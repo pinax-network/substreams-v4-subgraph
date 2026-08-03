@@ -75,3 +75,7 @@ logic while preserving a hard differential test against the deployed binaries.
 Historical backfill uses Graph Node v0.44 dump-compatible Parquet. CSV, generic
 analytics Parquet, a separate query database, and SQL Sink as the historical
 loader are outside the accepted architecture.
+
+The reducer, native writer, restore environment, and certification workflow are
+maintained in
+[`pinax-network/substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill).

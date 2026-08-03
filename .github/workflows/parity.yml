@@ -18,7 +18,7 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all --check
       - name: Run strict lints
-        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked --all-targets -- -D warnings
       - name: Upload parity report
         if: always()
         uses: actions/upload-artifact@v6

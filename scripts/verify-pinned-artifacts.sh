@@ -94,11 +94,5 @@ while IFS= read -r lock_file; do
 done < <(find "$repository_root/artifacts/deployment" -name artifacts.lock.json -type f | sort)
 
 jq -e '.format_version == 1 and (.ranges | length == 4)' "$repository_root/fixtures/base-ranges.json" >/dev/null
-jq -e '
-  .format_version == 1
-  and .root.start_block <= .root.end_block
-  and .child.seed_block + 1 == .child.first_processed_block
-  and .child.first_processed_block <= .child.end_block
-' "$repository_root/fixtures/oracle-ranges.json" >/dev/null
 
-echo "verified $artifact_count IPFS artifacts, $entity_count entity definitions, $wasm_count WASM modules, $deployment_count deployments, and 6 fixture ranges"
+echo "verified $artifact_count IPFS artifacts, $entity_count entity definitions, $wasm_count WASM modules, $deployment_count deployments, and 4 fixture ranges"
