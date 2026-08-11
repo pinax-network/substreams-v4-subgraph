@@ -115,12 +115,12 @@ backfill path:
 
 - `uniswap-v4-base-state-stores-v0.1.0.spkg`;
 - `uniswap-v4-base-store-fed-reducer-v0.1.0.spkg`;
-- `uniswap-v4-base-store-state-reducer-v0.4.0.spkg`;
-- a SHA-256 sidecar for each package.
+- `uniswap-v4-base-store-state-reducer-v0.4.0.spkg`.
 
 The assets are byte-identical to the packages certified by the backfill
-runtime before repository ownership was corrected. Their authoritative hashes
-and module graph are recorded in
+runtime before repository ownership was corrected. GitHub exposes the digest
+of each release asset; their authoritative compatibility hashes and module
+graph are also recorded in
 [`packages/base-uniswap-v4-v0.4.0.json`](packages/base-uniswap-v4-v0.4.0.json).
 Stage and verify the immutable release artifacts with:
 

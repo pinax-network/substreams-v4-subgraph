@@ -93,7 +93,7 @@ stores-validate: stores-test stores-lint stores-package
 release-packages:
 	@test ! -e "$(RELEASE_DIST)" || (echo "refusing existing RELEASE_DIST $(RELEASE_DIST)" >&2; exit 1)
 	mkdir -p "$(RELEASE_DIST)"
-	cp release/v0.4.0/*.spkg release/v0.4.0/*.spkg.sha256 "$(RELEASE_DIST)/"
+	cp release/v0.4.0/*.spkg "$(RELEASE_DIST)/"
 	./scripts/verify-release-packages.sh "$(RELEASE_DIST)"
 
 .PHONY: validate

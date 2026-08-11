@@ -35,7 +35,6 @@ for key in state_stores store_fed store_state; do
         echo "$asset SHA-256 mismatch: got $actual_sha, expected $expected_sha" >&2
         exit 1
     }
-    printf '%s  %s\n' "$actual_sha" "$asset" >"$package.sha256"
 
     module=$(jq -er --arg key "$key" '.packages[$key].module' "$contract")
     info=$(mktemp /tmp/uniswap-v4-package-info.XXXXXX)
