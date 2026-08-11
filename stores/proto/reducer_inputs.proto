@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package pinax.uniswap.v4.base.store.v1;
+
+import "events.proto";
+
+// ReducerInputs is the compact, Store-fed boundary consumed by the native
+// Graph Node compatibility reducer. The original decoder Event is kept as
+// its original protobuf type so this downstream package does not reinterpret
+// the immutable decoder schema.
+message ReducerInputs {
+  repeated ReducerEvent events = 1;
+  // Zero identifies the v0.3 Tick-only boundary. Version 2 requires Pool core
+  // state and raw ModifyLiquidity math. Version 3 additionally requires the
+  // cached Graph Decimal event amounts and Pool prices below.
+  uint32 state_version = 2;
+}
+
+message ReducerEvent {
+  pinax.uniswap.v4.base.v1.Event event = 1;
+  PoolPrimitiveState pool = 2;
+  repeated TickPrimitiveState ticks = 3;
+  ModifyLiquidityComputation modify_liquidity = 4;
+  TokenAmountComputation token_amounts = 5;
+}
+
+// Store-owned mutable Pool fields immediately before and after the event.
+// An empty byte string is signed big-endian zero. Reducer-owned Pool
+// existence remains authoritative for rejected Initialize events.
+message PoolPrimitiveState {
+  bytes tick_before = 1;
+  bytes tick_after = 2;
+  bytes sqrt_price_before = 3;
+  bytes sqrt_price_after = 4;
+  bytes liquidity_before = 5;
+  bytes liquidity_after = 6;
+  bytes transaction_count_before = 7;
+  bytes transaction_count_after = 8;
+  string token0_price_after = 9;
+  string token1_price_after = 10;
+}
+
+// Expensive event-local integer math computed and cached upstream. Version 2
+// converts these raw values natively; version 3 also supplies the exact Graph
+// Decimal token amounts below. Recursive pricing remains native and ordered.
+message ModifyLiquidityComputation {
+  bytes amount0_raw = 1;
+  bytes amount1_raw = 2;
+}
+
+// Exact post-Graph-Decimal-conversion token amounts. This applies to both
+// ModifyLiquidity and Swap and is independent of recursive pricing state.
+message TokenAmountComputation {
+  string amount0 = 1;
+  string amount1 = 2;
+}
+
+message TickPrimitiveState {
+  // Entries are emitted in the mapping's lower-Tick, upper-Tick save order.
+  // Integer Store values use minimal two's-complement, signed big-endian
+  // bytes to avoid decimal text conversion in WASM and the native reducer.
+  bytes liquidity_gross_before = 2;
+  bytes liquidity_gross_after = 3;
+  bytes liquidity_net_before = 4;
+  bytes liquidity_net_after = 5;
+}

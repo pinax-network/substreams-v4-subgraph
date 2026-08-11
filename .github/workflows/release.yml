@@ -1,0 +1,31 @@
+name: Release Substreams packages
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Substreams CLI
+        run: |
+          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
+      - name: Verify locked release packages
+        run: make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+      - name: Publish immutable package assets
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "$RUNNER_TEMP"/release/*.spkg \
+            "$RUNNER_TEMP"/release/*.spkg.sha256 \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes "Canonical Substreams Store packages for the Base Uniswap v4 Graph Node backfill. The assets reproduce the locked SHA-256 values and preserve all certified module hashes and existing Substreams caches."

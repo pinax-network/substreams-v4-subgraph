@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package pinax.uniswap.v4.base.store.v1;
+
+message StoreProbe {
+  repeated PoolState pools = 1;
+  repeated TickDelta tick_deltas = 2;
+}
+
+message PoolState {
+  uint64 block_number = 1;
+  uint64 trigger_order = 2;
+  uint64 ordinal = 3;
+  string pool_id = 4;
+  string tick = 5;
+  string liquidity = 6;
+  string transaction_count = 7;
+}
+
+message TickDelta {
+  uint64 ordinal = 1;
+  string key = 2;
+  string old_value = 3;
+  string new_value = 4;
+  int32 operation = 5;
+}

@@ -13,16 +13,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install Substreams CLI
+        run: |
+          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
       - name: Run offline parity fixtures
         run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/parity"
       - name: Check formatting
         run: cargo fmt --all --check
       - name: Run strict lints
         run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Validate Store packages
+        run: make stores-validate
+      - name: Verify locked release packages
+        run: make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
       - name: Upload parity report
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: offline-parity-report
           path: ${{ runner.temp }}/parity
+          if-no-files-found: error
+      - name: Upload locked package evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: store-package-release
+          path: ${{ runner.temp }}/release
           if-no-files-found: error

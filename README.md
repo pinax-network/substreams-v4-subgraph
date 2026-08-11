@@ -1,13 +1,14 @@
 # Uniswap v4 Base Substreams
 
-This repository builds the checksum-pinned Substreams event extractor for the
-Base Uniswap v4 deployment
+This repository builds and publishes the complete checksum-pinned Substreams
+pipeline for the Base Uniswap v4 deployment
 `Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB`.
 
-Its responsibility ends at deterministic `map_events` output. The Graph Node
-state reducer, proof-of-indexing implementation, native Parquet writer,
-segmented backfill, restore wrappers, and certification harness now live in the
-internal
+It owns deterministic event extraction, cacheable Store modules, compact
+Store-fed output maps, protobuf contracts, manifests, and SPKG releases. The
+native Graph Node entity reducer, proof-of-indexing implementation, PostgreSQL
+COPY/Parquet writers, lifecycle controls, and physical parity harness live in
+the internal
 [`pinax-network/substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill)
 repository.
 
@@ -42,9 +43,25 @@ that differs from the pinned manifest.
 - ignores malformed logs and logs from unpinned addresses;
 - remains independently verifiable from committed canonical Base fixtures.
 
-The output is an event contract, not Graph Node entity changes. Consumers that
-need Graph Node-compatible PostgreSQL state must use the matching backfill
-runtime release.
+`map_events` is the raw event contract. Production backfill consumers use the
+Store-owned `map_store_state_inputs` output and the matching Graph Node
+backfill runtime release.
+
+## Store-owned production path
+
+The package graph and its cache boundary are documented in
+[`docs/store-packages.md`](docs/store-packages.md). The production package adds:
+
+- immutable Pool tick, liquidity, and transaction-count Stores;
+- 16 size-bounded Tick-liquidity Store shards;
+- Pool square-root-price and token-decimal Stores;
+- cached exact Graph Decimal computations;
+- `map_store_state_inputs`, which emits compact protobuf frames for the native
+  Graph Node reducer.
+
+All Substreams state handling stays here. Graph Node entity save order,
+temporal rows, POI, VIDs, clamps, checkpoints, and database transactions remain
+owned by the backfill runtime.
 
 ## Build and validate
 
@@ -54,8 +71,9 @@ The repository pins Rust 1.90.0 and all direct dependencies:
 make validate
 ```
 
-This checks generated protobuf bindings, runs extraction tests, applies
-formatting and strict Clippy, builds the WASM, and writes:
+This checks generated protobuf bindings, runs extraction and Store tests,
+applies formatting and strict Clippy, builds all WASM modules, validates the
+three manifests and their cache boundaries, and writes:
 
 ```text
 spkg/uniswap-v4-base-backfill-v0.1.1.spkg
@@ -91,6 +109,25 @@ The backfill repository pins those values in
 `adapters/uniswap-v4-base/compatibility.json` and refuses a mismatched package.
 Package `v0.1.1` keeps the same `map_events` contract while moving the native
 Graph Node runtime and its documentation out of this repository.
+
+Release `v0.4.0` contains the three Store packages used by the production
+backfill path:
+
+- `uniswap-v4-base-state-stores-v0.1.0.spkg`;
+- `uniswap-v4-base-store-fed-reducer-v0.1.0.spkg`;
+- `uniswap-v4-base-store-state-reducer-v0.4.0.spkg`;
+- a SHA-256 sidecar for each package.
+
+The assets are byte-identical to the packages certified by the backfill
+runtime before repository ownership was corrected. Their authoritative hashes
+and module graph are recorded in
+[`packages/base-uniswap-v4-v0.4.0.json`](packages/base-uniswap-v4-v0.4.0.json).
+Stage and verify the immutable release artifacts with:
+
+```bash
+make release-packages
+./scripts/verify-release-packages.sh dist
+```
 
 ## Cached production range
 

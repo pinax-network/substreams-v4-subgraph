@@ -1,0 +1,18 @@
+[package]
+name = "uniswap-v4-store-state-v2"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Additional cache-stable Uniswap v4 Pool state Stores"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+prost = "=0.13.5"
+substreams = "=0.7.6"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

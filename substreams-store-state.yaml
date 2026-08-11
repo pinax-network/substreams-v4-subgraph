@@ -1,0 +1,267 @@
+specVersion: v0.1.0
+package:
+  name: uniswap_v4_base_store_state_reducer
+  version: v0.4.0
+  url: https://github.com/pinax-network/substreams-graph-node-backfill
+  description: Store-owned Pool/Tick state with size-bounded Tick shards and cached Graph Decimal computations
+
+# Reuse the three immutable, size-safe v0.2.0 Store modules and their existing
+# cache. The legacy Tick Store is intentionally not imported because it reaches
+# the server's 2 GiB per-Store ceiling on Base. Sixteen deterministic shards
+# preserve its exact keys and deltas while bounding each Store independently.
+imports:
+  state: ./downloads/uniswap-v4-base-state-stores-v0.1.0.spkg
+
+protobuf:
+  files:
+    - reducer_inputs.proto
+  importPaths:
+    - ./stores/proto
+    - ./proto
+  excludePaths:
+    - sf/substreams
+    - google
+
+binaries:
+  state_v2:
+    type: wasm/rust-v1
+    file: ./store-state/target/wasm32-unknown-unknown/release/uniswap_v4_store_state_v2.wasm
+  pool_metadata:
+    type: wasm/rust-v1
+    file: ./store-metadata/target/wasm32-unknown-unknown/release/uniswap_v4_store_pool_metadata.wasm
+  reducer_inputs:
+    type: wasm/rust-v1
+    file: ./store-probe/target/wasm32-unknown-unknown/release/uniswap_v4_state_store_probe.wasm
+  tick_shards:
+    type: wasm/rust-v1
+    file: ./store-tick-shards/target/wasm32-unknown-unknown/release/uniswap_v4_store_tick_shards.wasm
+
+modules:
+  - name: store_pool_tick
+    use: state:store_pool_tick
+
+  - name: store_pool_transaction_count
+    use: state:store_pool_transaction_count
+
+  - name: store_pool_liquidity
+    use: state:store_pool_liquidity
+
+  - name: store_tick_liquidity_00
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_01
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_02
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_03
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_04
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_05
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_06
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_07
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_08
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_09
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_10
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_11
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_12
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_13
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_14
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_15
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_pool_sqrt_price
+    kind: store
+    binary: state_v2
+    initialBlock: 25350988
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_token_decimals
+    kind: store
+    binary: pool_metadata
+    initialBlock: 25350988
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_pool_token_decimals
+    kind: store
+    binary: pool_metadata
+    initialBlock: 25350988
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+      - store: store_token_decimals
+
+  - name: map_store_state_inputs
+    kind: map
+    binary: reducer_inputs
+    initialBlock: 25350988
+    inputs:
+      - map: state:events:map_events
+      - store: store_pool_tick
+      - store: store_pool_sqrt_price
+      - store: store_pool_liquidity
+      - store: store_pool_transaction_count
+      - store: store_pool_token_decimals
+      - store: store_tick_liquidity_00
+        mode: deltas
+      - store: store_tick_liquidity_01
+        mode: deltas
+      - store: store_tick_liquidity_02
+        mode: deltas
+      - store: store_tick_liquidity_03
+        mode: deltas
+      - store: store_tick_liquidity_04
+        mode: deltas
+      - store: store_tick_liquidity_05
+        mode: deltas
+      - store: store_tick_liquidity_06
+        mode: deltas
+      - store: store_tick_liquidity_07
+        mode: deltas
+      - store: store_tick_liquidity_08
+        mode: deltas
+      - store: store_tick_liquidity_09
+        mode: deltas
+      - store: store_tick_liquidity_10
+        mode: deltas
+      - store: store_tick_liquidity_11
+        mode: deltas
+      - store: store_tick_liquidity_12
+        mode: deltas
+      - store: store_tick_liquidity_13
+        mode: deltas
+      - store: store_tick_liquidity_14
+        mode: deltas
+      - store: store_tick_liquidity_15
+        mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
+
+network: base

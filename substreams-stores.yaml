@@ -1,0 +1,80 @@
+specVersion: v0.1.0
+package:
+  name: uniswap_v4_base_state_stores
+  version: v0.1.0
+  url: https://github.com/pinax-network/substreams-graph-node-backfill
+  description: Store feasibility package for exact Base Uniswap v4 Graph Node backfills
+
+imports:
+  events: ./spkg/uniswap-v4-base-backfill-v0.1.0.spkg
+
+protobuf:
+  files:
+    - store_probe.proto
+  importPaths:
+    - ./stores/proto
+  excludePaths:
+    - sf/substreams
+    - google
+
+binaries:
+  primitives:
+    type: wasm/rust-v1
+    file: ./stores/target/wasm32-unknown-unknown/release/uniswap_v4_state_stores.wasm
+  probe:
+    type: wasm/rust-v1
+    file: ./store-probe/target/wasm32-unknown-unknown/release/uniswap_v4_state_store_probe.wasm
+
+modules:
+  - name: store_pool_tick
+    kind: store
+    binary: primitives
+    initialBlock: 25350988
+    updatePolicy: set
+    valueType: bigint
+    inputs:
+      - map: events:map_events
+
+  - name: store_pool_transaction_count
+    kind: store
+    binary: primitives
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: events:map_events
+
+  - name: store_tick_liquidity
+    kind: store
+    binary: primitives
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: events:map_events
+
+  - name: store_pool_liquidity
+    kind: store
+    binary: primitives
+    initialBlock: 25350988
+    updatePolicy: set_sum
+    valueType: bigint
+    inputs:
+      - map: events:map_events
+      - store: store_pool_tick
+
+  - name: map_store_probe
+    kind: map
+    binary: probe
+    initialBlock: 25350988
+    inputs:
+      - map: events:map_events
+      - store: store_pool_tick
+      - store: store_pool_liquidity
+      - store: store_pool_transaction_count
+      - store: store_tick_liquidity
+        mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.StoreProbe
+
+network: base
