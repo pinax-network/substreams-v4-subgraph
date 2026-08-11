@@ -1,0 +1,71 @@
+{
+  "format_version": 1,
+  "network": "base",
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "initial_block": 25350988,
+  "repository": "pinax-network/substreams-v4-subgraph",
+  "release": "v0.4.0",
+  "historical_build_repository": "pinax-network/substreams-graph-node-backfill",
+  "packages": {
+    "state_stores": {
+      "asset": "uniswap-v4-base-state-stores-v0.1.0.spkg",
+      "sha256": "ac3b295591e68949881509379aa99d8460134873f895187746a35ece003fa440",
+      "package_name": "uniswap_v4_base_state_stores",
+      "package_version": "v0.1.0",
+      "module": "map_store_probe",
+      "module_hash": "124f580c7c7925baaa24ff7f70d90cf23d8bf950",
+      "output_type": "proto:pinax.uniswap.v4.base.store.v1.StoreProbe",
+      "store_module_hashes": {
+        "store_pool_tick": "18281ae53a9d9dfea9370377d04f2acd3b721bb1",
+        "store_pool_transaction_count": "9bba8546c2e0e00d043d657b3188057c3cebcb3a",
+        "store_tick_liquidity": "6abfe7cad14187870e808e940ae4f4b3b56a0bfd",
+        "store_pool_liquidity": "7591d9dbe72fc6b7253e3e2ad0ae92a6c08e982d"
+      }
+    },
+    "store_fed": {
+      "asset": "uniswap-v4-base-store-fed-reducer-v0.1.0.spkg",
+      "sha256": "7cf06bb4b73c1409c581a7f878fb832c3e15c1d82193103d8bc7609dce8b58f3",
+      "package_name": "uniswap_v4_base_store_fed_reducer",
+      "package_version": "v0.1.0",
+      "module": "map_reducer_inputs",
+      "module_hash": "a0bf241d5388f66eb990728ba8f9ef768fde6bb4",
+      "output_type": "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs"
+    },
+    "store_state": {
+      "asset": "uniswap-v4-base-store-state-reducer-v0.4.0.spkg",
+      "sha256": "bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a",
+      "package_name": "uniswap_v4_base_store_state_reducer",
+      "package_version": "v0.4.0",
+      "module": "map_store_state_inputs",
+      "module_hash": "223408b90abae80960c41e11205fad2294accfa9",
+      "output_type": "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs",
+      "imported_module_hashes": {
+        "store_pool_tick": "18281ae53a9d9dfea9370377d04f2acd3b721bb1",
+        "store_pool_transaction_count": "9bba8546c2e0e00d043d657b3188057c3cebcb3a",
+        "store_pool_liquidity": "7591d9dbe72fc6b7253e3e2ad0ae92a6c08e982d"
+      },
+      "tick_liquidity_shards": {
+        "count": 16,
+        "partition": "pool_id_first_byte_mod_16",
+        "module_hashes": {
+          "store_tick_liquidity_00": "e754962e01dd79f0f39c823cc43159e1ff066378",
+          "store_tick_liquidity_01": "5ae15c8b92205647e64675836ff7d37667937085",
+          "store_tick_liquidity_02": "ae3a83d9065345807234d5b0a9d3d3feff59fad6",
+          "store_tick_liquidity_03": "38ee72219d450eae3347488c514e1b1ff2001a5a",
+          "store_tick_liquidity_04": "688c7e733c4649532b7a480273fc1f214ba96343",
+          "store_tick_liquidity_05": "6954016e63ff68928dc34dd129551c2266178373",
+          "store_tick_liquidity_06": "387a95fb627d202857d272688ba7022ffea45e2e",
+          "store_tick_liquidity_07": "81b65cd8dcb21a600cf07af44cdf0b92619354f0",
+          "store_tick_liquidity_08": "d9d6c2b9aedd76d1637196ac8fd88362263b3831",
+          "store_tick_liquidity_09": "349305f76d59ecddca3a92d6f5d8f2891ac94a34",
+          "store_tick_liquidity_10": "618c9835b8f5448c183d3a3f6b098a0ded48c41f",
+          "store_tick_liquidity_11": "4c6673530f20acc1a3c3a26f8c10b1b64b03004c",
+          "store_tick_liquidity_12": "6f05351b84b4e2b58ea2c120aa72aa04db2493f5",
+          "store_tick_liquidity_13": "8de5a56aa44df4e48ee4d80edaf712d23272ea22",
+          "store_tick_liquidity_14": "f0dce3fc9f15b66c44365f5373857b7719dd2553",
+          "store_tick_liquidity_15": "d55c2ca1b2677e530015f44ede16d9aa86abc8a7"
+        }
+      }
+    }
+  }
+}
