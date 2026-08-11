@@ -25,7 +25,6 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             "$RUNNER_TEMP"/release/*.spkg \
-            "$RUNNER_TEMP"/release/*.spkg.sha256 \
             --verify-tag \
             --title "$GITHUB_REF_NAME" \
-            --notes "Canonical Substreams Store packages for the Base Uniswap v4 Graph Node backfill. The assets reproduce the locked SHA-256 values and preserve all certified module hashes and existing Substreams caches."
+            --notes "Canonical Substreams Store packages for the Base Uniswap v4 Graph Node backfill. GitHub records each asset digest; the repository release lock preserves the certified SHA-256 values, module hashes, and existing Substreams caches."
