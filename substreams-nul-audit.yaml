@@ -1,0 +1,38 @@
+specVersion: v0.1.0
+package:
+  name: uniswap_v4_base_nul_metadata_audit
+  version: v0.1.0
+  url: https://github.com/pinax-network/substreams-v4-subgraph
+  description: Exhaustive stateless audit of NUL-bearing token metadata for the Base compatibility certificate
+
+# Import the immutable v0.4.0 Store-state package instead of rebuilding it.
+# The audit map is downstream-only, so all 16 Tick Stores and the certified
+# map_store_state_inputs module retain their released hashes and cache.
+imports:
+  state: ./release/v0.4.0/uniswap-v4-base-store-state-reducer-v0.4.0.spkg
+
+protobuf:
+  files:
+    - nul_audit.proto
+  importPaths:
+    - ./nul-audit/proto
+  excludePaths:
+    - sf/substreams
+    - google
+
+binaries:
+  audit:
+    type: wasm/rust-v1
+    file: ./nul-audit/target/wasm32-unknown-unknown/release/uniswap_v4_base_nul_audit.wasm
+
+modules:
+  - name: map_nul_metadata_audit
+    kind: map
+    binary: audit
+    initialBlock: 25350988
+    inputs:
+      - map: state:map_store_state_inputs
+    output:
+      type: proto:pinax.uniswap.v4.base.audit.v1.NulMetadataAudit
+
+network: base

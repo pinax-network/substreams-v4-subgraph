@@ -31,6 +31,8 @@ jobs:
         run: make stores-validate
       - name: Verify locked release packages
         run: make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+      - name: Build evidence-only NUL audit release candidate
+        run: make release-nul-audit-package RELEASE_DIST="$RUNNER_TEMP/nul-audit-release"
       - name: Upload parity report
         if: always()
         uses: actions/upload-artifact@v6
@@ -44,4 +46,11 @@ jobs:
         with:
           name: store-package-release
           path: ${{ runner.temp }}/release
+          if-no-files-found: error
+      - name: Upload NUL audit release candidate
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nul-audit-package-release-candidate
+          path: ${{ runner.temp }}/nul-audit-release
           if-no-files-found: error

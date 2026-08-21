@@ -5,6 +5,7 @@ SPKG_DIR ?= spkg
 STORE_MANIFEST ?= substreams-stores.yaml
 STORE_FED_MANIFEST ?= substreams-store-fed.yaml
 STORE_STATE_MANIFEST ?= substreams-store-state.yaml
+NUL_AUDIT_MANIFEST ?= substreams-nul-audit.yaml
 RELEASE_DIST ?= dist
 
 .DEFAULT_GOAL := pack
@@ -54,6 +55,7 @@ stores-test:
 	cargo test --locked --manifest-path store-state/Cargo.toml
 	cargo test --locked --manifest-path store-metadata/Cargo.toml
 	cargo test --locked --manifest-path store-tick-shards/Cargo.toml
+	cargo test --locked --manifest-path nul-audit/Cargo.toml
 
 .PHONY: stores-lint
 stores-lint:
@@ -67,6 +69,8 @@ stores-lint:
 	cargo clippy --locked --manifest-path store-metadata/Cargo.toml --all-targets -- -D warnings
 	cargo fmt --manifest-path store-tick-shards/Cargo.toml --all --check
 	cargo clippy --locked --manifest-path store-tick-shards/Cargo.toml --all-targets -- -D warnings
+	cargo fmt --manifest-path nul-audit/Cargo.toml --all --check
+	cargo clippy --locked --manifest-path nul-audit/Cargo.toml --all-targets -- -D warnings
 
 .PHONY: stores-build
 stores-build:
@@ -75,6 +79,24 @@ stores-build:
 	cargo build --locked --manifest-path store-state/Cargo.toml --release --target wasm32-unknown-unknown
 	cargo build --locked --manifest-path store-metadata/Cargo.toml --release --target wasm32-unknown-unknown
 	cargo build --locked --manifest-path store-tick-shards/Cargo.toml --release --target wasm32-unknown-unknown
+	cargo build --locked --manifest-path nul-audit/Cargo.toml --release --target wasm32-unknown-unknown
+
+.PHONY: nul-audit-build
+nul-audit-build:
+	cargo build --locked --manifest-path nul-audit/Cargo.toml --release --target wasm32-unknown-unknown
+
+.PHONY: nul-audit-package
+nul-audit-package: nul-audit-build
+	mkdir -p downloads
+	substreams pack "$(NUL_AUDIT_MANIFEST)" --output-file downloads/uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg
+	./scripts/verify-nul-audit-package.sh downloads/uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg
+
+.PHONY: release-nul-audit-package
+release-nul-audit-package: nul-audit-package
+	@test ! -e "$(RELEASE_DIST)" || (echo "refusing existing RELEASE_DIST $(RELEASE_DIST)" >&2; exit 1)
+	mkdir -p "$(RELEASE_DIST)"
+	cp downloads/uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg "$(RELEASE_DIST)/"
+	./scripts/verify-nul-audit-package.sh "$(RELEASE_DIST)/uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg"
 
 .PHONY: stores-package
 stores-package: download-event-package stores-build
@@ -86,8 +108,11 @@ stores-validate: stores-test stores-lint stores-package
 	substreams info "$(STORE_MANIFEST)" map_store_probe --json >/dev/null
 	substreams info "$(STORE_FED_MANIFEST)" map_reducer_inputs --json >/dev/null
 	substreams info "$(STORE_STATE_MANIFEST)" map_store_state_inputs --json >/dev/null
+	substreams info "$(NUL_AUDIT_MANIFEST)" map_nul_metadata_audit --json >/dev/null
 	./scripts/test-store-cache-boundary.sh
 	./scripts/test-store-state-cache-boundary.sh
+	./scripts/test-nul-audit-cache-boundary.sh
+	$(MAKE) nul-audit-package
 
 .PHONY: release-packages
 release-packages:
