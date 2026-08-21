@@ -25,6 +25,10 @@ uniswap-v4-base-state-stores-v0.1.0.spkg
            16 store_tick_liquidity shards
            pool sqrt-price and token-decimal Stores
            map_store_state_inputs
+             |
+             v
+           uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg
+             map_nul_metadata_audit (evidence-only)
 ```
 
 The production default is `map_store_state_inputs`. It emits the compact
@@ -105,3 +109,8 @@ Each shard preserves the legacy key and delta encoding while bounding storage.
 Changing the assembler binary must leave every Store hash unchanged. Changing
 the Tick-shard binary may change only the 16 Tick-shard hashes and downstream
 maps. The cache-boundary tests enforce both invariants.
+
+The NUL metadata audit is a downstream-only certification package. It imports
+the complete immutable v0.4.0 graph and adds one map, so changing its WASM must
+not change any imported module hash. It is never a production reducer-input
+replacement.

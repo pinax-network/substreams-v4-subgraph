@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package pinax.uniswap.v4.base.audit.v1;
+
+// A block output is empty unless a token metadata string contains U+0000.
+// This keeps the full-history audit map cheap to stream while preserving the
+// exact raw UTF-8 bytes and chain identity for every occurrence.
+message NulMetadataAudit {
+  repeated NulMetadataOccurrence occurrences = 1;
+}
+
+message NulMetadataOccurrence {
+  uint64 block_number = 1;
+  bytes block_hash = 2;
+  bytes transaction_hash = 3;
+  uint64 log_ordinal = 4;
+  bytes token_address = 5;
+  string field = 6;
+  bytes raw_utf8 = 7;
+  string corrected_value = 8;
+}

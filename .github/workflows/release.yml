@@ -14,17 +14,38 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          targets: wasm32-unknown-unknown
       - name: Install Substreams CLI
         run: |
           curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
           echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
           sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
-      - name: Verify locked release packages
-        run: make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+      - name: Stage release packages
+        run: |
+          case "$GITHUB_REF_NAME" in
+            v0.4.0)
+              make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+              printf '%s\n' \
+                'Canonical immutable Store packages for the Base Uniswap v4 Graph Node backfill. GitHub records each asset digest; the repository release lock preserves the certified SHA-256 values, module hashes, and existing Substreams caches.' \
+                > "$RUNNER_TEMP/release-notes.md"
+              ;;
+            v0.4.1)
+              make release-nul-audit-package RELEASE_DIST="$RUNNER_TEMP/release"
+              printf '%s\n' \
+                'Evidence-only NUL metadata audit package for terminal Base Uniswap v4 certification. It imports the immutable v0.4.0 Store graph and preserves every existing Store cache. GitHub records the asset digest; no checksum sidecar is published.' \
+                > "$RUNNER_TEMP/release-notes.md"
+              ;;
+            *)
+              echo "release workflow has no package policy for $GITHUB_REF_NAME" >&2
+              exit 1
+              ;;
+          esac
       - name: Publish immutable package assets
         run: |
           gh release create "$GITHUB_REF_NAME" \
             "$RUNNER_TEMP"/release/*.spkg \
             --verify-tag \
             --title "$GITHUB_REF_NAME" \
-            --notes "Canonical Substreams Store packages for the Base Uniswap v4 Graph Node backfill. GitHub records each asset digest; the repository release lock preserves the certified SHA-256 values, module hashes, and existing Substreams caches."
+            --notes-file "$RUNNER_TEMP/release-notes.md"

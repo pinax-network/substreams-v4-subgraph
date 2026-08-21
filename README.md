@@ -63,6 +63,20 @@ All Substreams state handling stays here. Graph Node entity save order,
 temporal rows, POI, VIDs, clamps, checkpoints, and database transactions remain
 owned by the backfill runtime.
 
+## Compatibility audit package
+
+`substreams-nul-audit.yaml` imports the immutable v0.4.0 Store-state package
+and adds a downstream-only `map_nul_metadata_audit` module. It proves the
+complete scope of the production `postgres-nul-truncate-v1` exception over the
+fixed backfill range without changing any cached Store or reducer-input module
+hash.
+
+The package emits only NUL-bearing token metadata occurrences. Certification
+uses zero-length frames for clean blocks, so the retained stream proves full
+block coverage while remaining compact. See
+[`docs/nul-metadata-audit.md`](docs/nul-metadata-audit.md) for the package,
+range, cache, evidence, and release contracts.
+
 ## Build and validate
 
 The repository pins Rust 1.90.0 and all direct dependencies:
@@ -128,6 +142,11 @@ Stage and verify the immutable release artifacts with:
 make release-packages
 ./scripts/verify-release-packages.sh dist
 ```
+
+Release `v0.4.1` adds the evidence-only package
+`uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg`. CI builds and publishes that
+asset from this repository; it imports the released v0.4.0 module graph so all
+existing Store caches remain reusable. No checksum sidecar is published.
 
 ## Cached production range
 
