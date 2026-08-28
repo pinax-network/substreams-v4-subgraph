@@ -18,7 +18,7 @@ mod pb {
 
 use pb::events::{event, Events};
 
-const TICK_STORE_SHARDS: u8 = 16;
+const TICK_STORE_SHARDS: u8 = 64;
 
 macro_rules! tick_store_handler {
     ($handler:ident, $shard:expr) => {
@@ -45,6 +45,54 @@ tick_store_handler!(store_tick_liquidity_12, 12);
 tick_store_handler!(store_tick_liquidity_13, 13);
 tick_store_handler!(store_tick_liquidity_14, 14);
 tick_store_handler!(store_tick_liquidity_15, 15);
+tick_store_handler!(store_tick_liquidity_16, 16);
+tick_store_handler!(store_tick_liquidity_17, 17);
+tick_store_handler!(store_tick_liquidity_18, 18);
+tick_store_handler!(store_tick_liquidity_19, 19);
+tick_store_handler!(store_tick_liquidity_20, 20);
+tick_store_handler!(store_tick_liquidity_21, 21);
+tick_store_handler!(store_tick_liquidity_22, 22);
+tick_store_handler!(store_tick_liquidity_23, 23);
+tick_store_handler!(store_tick_liquidity_24, 24);
+tick_store_handler!(store_tick_liquidity_25, 25);
+tick_store_handler!(store_tick_liquidity_26, 26);
+tick_store_handler!(store_tick_liquidity_27, 27);
+tick_store_handler!(store_tick_liquidity_28, 28);
+tick_store_handler!(store_tick_liquidity_29, 29);
+tick_store_handler!(store_tick_liquidity_30, 30);
+tick_store_handler!(store_tick_liquidity_31, 31);
+tick_store_handler!(store_tick_liquidity_32, 32);
+tick_store_handler!(store_tick_liquidity_33, 33);
+tick_store_handler!(store_tick_liquidity_34, 34);
+tick_store_handler!(store_tick_liquidity_35, 35);
+tick_store_handler!(store_tick_liquidity_36, 36);
+tick_store_handler!(store_tick_liquidity_37, 37);
+tick_store_handler!(store_tick_liquidity_38, 38);
+tick_store_handler!(store_tick_liquidity_39, 39);
+tick_store_handler!(store_tick_liquidity_40, 40);
+tick_store_handler!(store_tick_liquidity_41, 41);
+tick_store_handler!(store_tick_liquidity_42, 42);
+tick_store_handler!(store_tick_liquidity_43, 43);
+tick_store_handler!(store_tick_liquidity_44, 44);
+tick_store_handler!(store_tick_liquidity_45, 45);
+tick_store_handler!(store_tick_liquidity_46, 46);
+tick_store_handler!(store_tick_liquidity_47, 47);
+tick_store_handler!(store_tick_liquidity_48, 48);
+tick_store_handler!(store_tick_liquidity_49, 49);
+tick_store_handler!(store_tick_liquidity_50, 50);
+tick_store_handler!(store_tick_liquidity_51, 51);
+tick_store_handler!(store_tick_liquidity_52, 52);
+tick_store_handler!(store_tick_liquidity_53, 53);
+tick_store_handler!(store_tick_liquidity_54, 54);
+tick_store_handler!(store_tick_liquidity_55, 55);
+tick_store_handler!(store_tick_liquidity_56, 56);
+tick_store_handler!(store_tick_liquidity_57, 57);
+tick_store_handler!(store_tick_liquidity_58, 58);
+tick_store_handler!(store_tick_liquidity_59, 59);
+tick_store_handler!(store_tick_liquidity_60, 60);
+tick_store_handler!(store_tick_liquidity_61, 61);
+tick_store_handler!(store_tick_liquidity_62, 62);
+tick_store_handler!(store_tick_liquidity_63, 63);
 
 fn store_tick_liquidity_shard(events: Events, output: StoreAddBigInt, shard: u8) {
     for event in &events.events {
@@ -88,14 +136,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn partitions_every_first_byte_into_one_of_sixteen_shards() {
+    fn partitions_every_first_byte_into_one_of_sixty_four_shards() {
         let mut counts = [0_u8; TICK_STORE_SHARDS as usize];
         for first_byte in 0_u8..=u8::MAX {
             let shard = tick_store_shard(&[first_byte; 32]);
             assert!(shard < TICK_STORE_SHARDS);
             counts[shard as usize] += 1;
         }
-        assert_eq!(counts, [16; TICK_STORE_SHARDS as usize]);
+        assert_eq!(counts, [4; TICK_STORE_SHARDS as usize]);
     }
 
     #[test]

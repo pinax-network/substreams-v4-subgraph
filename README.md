@@ -53,7 +53,7 @@ The package graph and its cache boundary are documented in
 [`docs/store-packages.md`](docs/store-packages.md). The production package adds:
 
 - immutable Pool tick, liquidity, and transaction-count Stores;
-- 16 size-bounded Tick-liquidity Store shards;
+- 64 size-bounded Tick-liquidity Store shards;
 - Pool square-root-price and token-decimal Stores;
 - cached exact Graph Decimal computations;
 - `map_store_state_inputs`, which emits compact protobuf frames for the native
@@ -124,19 +124,21 @@ The backfill repository pins those values in
 Package `v0.1.1` keeps the same `map_events` contract while moving the native
 Graph Node runtime and its documentation out of this repository.
 
-Release `v0.4.0` contains the three Store packages used by the production
-backfill path:
+Release `v0.4.0` remains the immutable 16-shard bundle. Release `v0.5.0`
+retains its first two packages byte-for-byte and replaces only the Store-state
+package used by the production backfill path:
 
 - `uniswap-v4-base-state-stores-v0.1.0.spkg`;
 - `uniswap-v4-base-store-fed-reducer-v0.1.0.spkg`;
-- `uniswap-v4-base-store-state-reducer-v0.4.0.spkg`.
+- `uniswap-v4-base-store-state-reducer-v0.5.0.spkg`.
 
-The assets are byte-identical to the packages certified by the backfill
-runtime before repository ownership was corrected. GitHub exposes the digest
-of each release asset; their authoritative compatibility hashes and module
-graph are also recorded in
-[`packages/base-uniswap-v4-v0.4.0.json`](packages/base-uniswap-v4-v0.4.0.json).
-Stage and verify the immutable release artifacts with:
+The State Stores and Store-fed assets are byte-identical to the packages
+certified before repository ownership was corrected. The v0.5.0 Store-state
+asset expands Tick liquidity from 16 to 64 Stores after live Base history
+reached the 2 GiB per-Store ceiling. Its authoritative compatibility hashes and
+module graph are recorded in
+[`packages/base-uniswap-v4-v0.5.0.json`](packages/base-uniswap-v4-v0.5.0.json).
+Stage and verify the immutable reviewed release artifacts with:
 
 ```bash
 make release-packages
@@ -150,10 +152,10 @@ existing Store caches remain reusable. No checksum sidecar is published.
 
 ## Cached production range
 
-The production `sink noop` cache build completed successfully for
-`[25,350,988, 49,477,582)` using the released package and 500 parallel workers.
-The stop block is exclusive and corresponds to finalized Base block
-`49,477,581` at the time the run was pinned.
+The production target remains `[25,350,988, 49,477,582)`. Release v0.4.0
+proved insufficient when `store_tick_liquidity_03` crossed 2 GiB at block
+`39,596,133`; v0.5.0 restores full-range headroom by dividing every former
+Tick shard into four deterministic shards.
 
 ## Pinned artifacts and fixtures
 

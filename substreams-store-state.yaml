@@ -1,14 +1,14 @@
 specVersion: v0.1.0
 package:
   name: uniswap_v4_base_store_state_reducer
-  version: v0.4.0
-  url: https://github.com/pinax-network/substreams-graph-node-backfill
-  description: Store-owned Pool/Tick state with size-bounded Tick shards and cached Graph Decimal computations
+  version: v0.5.0
+  url: https://github.com/pinax-network/substreams-v4-subgraph
+  description: Store-owned Pool/Tick state with 64 size-bounded Tick shards and cached Graph Decimal computations
 
 # Reuse the three immutable, size-safe v0.2.0 Store modules and their existing
 # cache. The legacy Tick Store is intentionally not imported because it reaches
-# the server's 2 GiB per-Store ceiling on Base. Sixteen deterministic shards
-# preserve its exact keys and deltas while bounding each Store independently.
+# the server's 2 GiB per-Store ceiling on Base. Sixty-four deterministic shards
+# preserve its exact keys and deltas while restoring full-history headroom.
 imports:
   state: ./downloads/uniswap-v4-base-state-stores-v0.1.0.spkg
 
@@ -190,6 +190,438 @@ modules:
     inputs:
       - map: state:events:map_events
 
+  - name: store_tick_liquidity_16
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_17
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_18
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_19
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_20
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_21
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_22
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_23
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_24
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_25
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_26
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_27
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_28
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_29
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_30
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_31
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_32
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_33
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_34
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_35
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_36
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_37
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_38
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_39
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_40
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_41
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_42
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_43
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_44
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_45
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_46
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_47
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_48
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_49
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_50
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_51
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_52
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_53
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_54
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_55
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_56
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_57
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_58
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_59
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_60
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_61
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_62
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
+  - name: store_tick_liquidity_63
+    kind: store
+    binary: tick_shards
+    initialBlock: 25350988
+    updatePolicy: add
+    valueType: bigint
+    inputs:
+      - map: state:events:map_events
+
   - name: store_pool_sqrt_price
     kind: store
     binary: state_v2
@@ -218,7 +650,7 @@ modules:
       - map: state:events:map_events
       - store: store_token_decimals
 
-  - name: map_store_state_inputs
+  - name: map_store_state_inputs_00
     kind: map
     binary: reducer_inputs
     initialBlock: 25350988
@@ -261,6 +693,157 @@ modules:
         mode: deltas
       - store: store_tick_liquidity_15
         mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
+
+  - name: map_store_state_inputs_01
+    kind: map
+    binary: reducer_inputs
+    initialBlock: 25350988
+    inputs:
+      - map: state:events:map_events
+      - store: store_pool_tick
+      - store: store_pool_sqrt_price
+      - store: store_pool_liquidity
+      - store: store_pool_transaction_count
+      - store: store_pool_token_decimals
+      - store: store_tick_liquidity_16
+        mode: deltas
+      - store: store_tick_liquidity_17
+        mode: deltas
+      - store: store_tick_liquidity_18
+        mode: deltas
+      - store: store_tick_liquidity_19
+        mode: deltas
+      - store: store_tick_liquidity_20
+        mode: deltas
+      - store: store_tick_liquidity_21
+        mode: deltas
+      - store: store_tick_liquidity_22
+        mode: deltas
+      - store: store_tick_liquidity_23
+        mode: deltas
+      - store: store_tick_liquidity_24
+        mode: deltas
+      - store: store_tick_liquidity_25
+        mode: deltas
+      - store: store_tick_liquidity_26
+        mode: deltas
+      - store: store_tick_liquidity_27
+        mode: deltas
+      - store: store_tick_liquidity_28
+        mode: deltas
+      - store: store_tick_liquidity_29
+        mode: deltas
+      - store: store_tick_liquidity_30
+        mode: deltas
+      - store: store_tick_liquidity_31
+        mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
+
+  - name: map_store_state_inputs_02
+    kind: map
+    binary: reducer_inputs
+    initialBlock: 25350988
+    inputs:
+      - map: state:events:map_events
+      - store: store_pool_tick
+      - store: store_pool_sqrt_price
+      - store: store_pool_liquidity
+      - store: store_pool_transaction_count
+      - store: store_pool_token_decimals
+      - store: store_tick_liquidity_32
+        mode: deltas
+      - store: store_tick_liquidity_33
+        mode: deltas
+      - store: store_tick_liquidity_34
+        mode: deltas
+      - store: store_tick_liquidity_35
+        mode: deltas
+      - store: store_tick_liquidity_36
+        mode: deltas
+      - store: store_tick_liquidity_37
+        mode: deltas
+      - store: store_tick_liquidity_38
+        mode: deltas
+      - store: store_tick_liquidity_39
+        mode: deltas
+      - store: store_tick_liquidity_40
+        mode: deltas
+      - store: store_tick_liquidity_41
+        mode: deltas
+      - store: store_tick_liquidity_42
+        mode: deltas
+      - store: store_tick_liquidity_43
+        mode: deltas
+      - store: store_tick_liquidity_44
+        mode: deltas
+      - store: store_tick_liquidity_45
+        mode: deltas
+      - store: store_tick_liquidity_46
+        mode: deltas
+      - store: store_tick_liquidity_47
+        mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
+
+  - name: map_store_state_inputs_03
+    kind: map
+    binary: reducer_inputs
+    initialBlock: 25350988
+    inputs:
+      - map: state:events:map_events
+      - store: store_pool_tick
+      - store: store_pool_sqrt_price
+      - store: store_pool_liquidity
+      - store: store_pool_transaction_count
+      - store: store_pool_token_decimals
+      - store: store_tick_liquidity_48
+        mode: deltas
+      - store: store_tick_liquidity_49
+        mode: deltas
+      - store: store_tick_liquidity_50
+        mode: deltas
+      - store: store_tick_liquidity_51
+        mode: deltas
+      - store: store_tick_liquidity_52
+        mode: deltas
+      - store: store_tick_liquidity_53
+        mode: deltas
+      - store: store_tick_liquidity_54
+        mode: deltas
+      - store: store_tick_liquidity_55
+        mode: deltas
+      - store: store_tick_liquidity_56
+        mode: deltas
+      - store: store_tick_liquidity_57
+        mode: deltas
+      - store: store_tick_liquidity_58
+        mode: deltas
+      - store: store_tick_liquidity_59
+        mode: deltas
+      - store: store_tick_liquidity_60
+        mode: deltas
+      - store: store_tick_liquidity_61
+        mode: deltas
+      - store: store_tick_liquidity_62
+        mode: deltas
+      - store: store_tick_liquidity_63
+        mode: deltas
+    output:
+      type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
+
+  - name: map_store_state_inputs
+    kind: map
+    binary: reducer_inputs
+    initialBlock: 25350988
+    inputs:
+      - map: state:events:map_events
+      - map: map_store_state_inputs_00
+      - map: map_store_state_inputs_01
+      - map: map_store_state_inputs_02
+      - map: map_store_state_inputs_03
     output:
       type: proto:pinax.uniswap.v4.base.store.v1.ReducerInputs
 

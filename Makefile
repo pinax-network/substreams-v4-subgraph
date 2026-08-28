@@ -7,6 +7,7 @@ STORE_FED_MANIFEST ?= substreams-store-fed.yaml
 STORE_STATE_MANIFEST ?= substreams-store-state.yaml
 NUL_AUDIT_MANIFEST ?= substreams-nul-audit.yaml
 RELEASE_DIST ?= dist
+RELEASE_CONTRACT ?= packages/base-uniswap-v4-v0.5.0.json
 
 .DEFAULT_GOAL := pack
 
@@ -118,8 +119,17 @@ stores-validate: stores-test stores-lint stores-package
 release-packages:
 	@test ! -e "$(RELEASE_DIST)" || (echo "refusing existing RELEASE_DIST $(RELEASE_DIST)" >&2; exit 1)
 	mkdir -p "$(RELEASE_DIST)"
+	cp release/v0.4.0/uniswap-v4-base-state-stores-v0.1.0.spkg "$(RELEASE_DIST)/"
+	cp release/v0.4.0/uniswap-v4-base-store-fed-reducer-v0.1.0.spkg "$(RELEASE_DIST)/"
+	cp release/v0.5.0/uniswap-v4-base-store-state-reducer-v0.5.0.spkg "$(RELEASE_DIST)/"
+	./scripts/verify-release-packages.sh "$(RELEASE_DIST)" "$(RELEASE_CONTRACT)"
+
+.PHONY: release-packages-v0.4.0
+release-packages-v0.4.0:
+	@test ! -e "$(RELEASE_DIST)" || (echo "refusing existing RELEASE_DIST $(RELEASE_DIST)" >&2; exit 1)
+	mkdir -p "$(RELEASE_DIST)"
 	cp release/v0.4.0/*.spkg "$(RELEASE_DIST)/"
-	./scripts/verify-release-packages.sh "$(RELEASE_DIST)"
+	./scripts/verify-release-packages.sh "$(RELEASE_DIST)" packages/base-uniswap-v4-v0.4.0.json
 
 .PHONY: validate
 validate: check-generated test lint pack stores-validate

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if (( $# != 1 )); then
-    echo "usage: $0 <store-state-spkg>" >&2
+if (( $# < 1 || $# > 2 )); then
+    echo "usage: $0 <store-state-spkg> [release-contract]" >&2
     exit 1
 fi
 
@@ -10,7 +10,7 @@ repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_dir"
 
 package=$1
-contract=packages/base-uniswap-v4-v0.4.0.json
+contract=${2:-packages/base-uniswap-v4-v0.5.0.json}
 [[ -f "$package" ]] || {
     echo "missing Store-state package: $package" >&2
     exit 1
@@ -54,6 +54,7 @@ while IFS=$'\t' read -r module_name expected; do
     fi
 done < <(jq -r '
     (.packages.store_state.imported_module_hashes +
+     (.packages.store_state.partition_module_hashes // {}) +
      .packages.store_state.tick_liquidity_shards.module_hashes +
      {(.packages.store_state.module): .packages.store_state.module_hash}) |
     to_entries[] | [.key, .value] | @tsv
@@ -61,13 +62,43 @@ done < <(jq -r '
 
 expected_delta_inputs=$(jq -c \
     '.packages.store_state.tick_liquidity_shards.module_hashes | keys' "$contract")
-actual_delta_inputs=$(jq -c --arg module_name "$module" '
-    [.modules[] | select(.name == $module_name) | .inputs[] |
-     select(.type == "store" and .mode == "deltas") | .name]
-' "$info")
+partition_count=$(jq -er '.packages.store_state.partition_module_hashes // {} | length' "$contract")
+if (( partition_count == 0 )); then
+    actual_delta_inputs=$(jq -c --arg module_name "$module" '
+        [.modules[] | select(.name == $module_name) | .inputs[] |
+         select(.type == "store" and .mode == "deltas") | .name]
+    ' "$info")
+else
+    expected_partitions=$(jq -c '.packages.store_state.partition_module_hashes | keys' "$contract")
+    actual_partitions=$(jq -c --arg module_name "$module" '
+        [.modules[] | select(.name == $module_name) | .inputs[] |
+         select(.type == "map" and (.name | startswith("map_store_state_inputs_"))) | .name]
+    ' "$info")
+    if [[ "$actual_partitions" != "$expected_partitions" ]]; then
+        echo "Store-state assembler partitions differ from the release contract" >&2
+        exit 1
+    fi
+    actual_delta_inputs=$(jq -c --slurpfile contract "$contract" '
+        [.modules[] |
+         select(.name as $name |
+           $contract[0].packages.store_state.partition_module_hashes | has($name)) |
+         .inputs[] | select(.type == "store" and .mode == "deltas") | .name]
+    ' "$info")
+fi
 if [[ "$actual_delta_inputs" != "$expected_delta_inputs" ]]; then
-    echo "Store-state mapper Tick shard inputs differ from the release contract" >&2
+    echo "Store-state partition Tick shard inputs differ from the release contract" >&2
     exit 1
+fi
+
+if (( partition_count > 0 )); then
+    jq -e --slurpfile contract "$contract" '
+        [.modules[] |
+         select(.name as $name |
+           $contract[0].packages.store_state.partition_module_hashes | has($name)) |
+         (.inputs | length == 22) and
+         (.output_type == "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs")] |
+        all
+    ' "$info" >/dev/null
 fi
 
 while IFS= read -r shard; do
@@ -80,4 +111,5 @@ while IFS= read -r shard; do
     ' "$info" >/dev/null
 done < <(jq -r '.packages.store_state.tick_liquidity_shards.module_hashes | keys[]' "$contract")
 
-echo "verified Linux Store-state SPKG hash, module graph, and 16 Tick shard hashes"
+shard_count=$(jq -er '.packages.store_state.tick_liquidity_shards.count' "$contract")
+echo "verified Linux Store-state SPKG hash, module graph, and $shard_count Tick shard hashes"

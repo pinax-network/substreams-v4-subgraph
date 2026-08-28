@@ -21,8 +21,8 @@ uniswap-v4-base-state-stores-v0.1.0.spkg
     +--> uniswap-v4-base-store-fed-reducer-v0.1.0.spkg
     |      map_reducer_inputs
     |
-    +--> uniswap-v4-base-store-state-reducer-v0.4.0.spkg
-           16 store_tick_liquidity shards
+    +--> uniswap-v4-base-store-state-reducer-v0.5.0.spkg
+           64 store_tick_liquidity shards
            pool sqrt-price and token-decimal Stores
            map_store_state_inputs
              |
@@ -55,8 +55,10 @@ informational. Rewriting it would change the SPKG digest. New package versions
 must use `https://github.com/pinax-network/substreams-v4-subgraph` and import or
 `use` immutable earlier modules when their cache identity must be retained.
 
-The authoritative digests and module hashes are recorded in
-`packages/base-uniswap-v4-v0.4.0.json`.
+The immutable v0.4.0 digests and module hashes remain recorded in
+`packages/base-uniswap-v4-v0.4.0.json`. Release v0.5.0 has a separate lock and
+retains the three imported Store hashes while replacing only the Tick-shard
+writer and its downstream map.
 
 Historical source required to explain the earlier packages is retained under
 `legacy/`: the v0.2.0 probe used by the first State Stores package and the
@@ -91,6 +93,7 @@ evidence, not a replacement for a certified artifact.
 
 - GitHub release `v0.1.0` remains the canonical event package release.
 - GitHub release `v0.4.0` is the canonical Store package bundle.
+- GitHub release `v0.5.0` is the canonical 64-shard production Store bundle.
 - Never delete or replace a released asset.
 - Never use `--clobber` for immutable SPKG release assets.
 - Consumers pin repository, release, filename, SHA-256, package version,
@@ -102,12 +105,14 @@ evidence, not a replacement for a certified artifact.
 
 The legacy single `store_tick_liquidity` module is retained only for the
 earlier Store-fed package. It crosses the Substreams server's 2 GiB per-Store
-limit over the full Base history. The production Store-state package replaces
-it with 16 deterministic shards selected by the first Pool-ID byte modulo 16.
-Each shard preserves the legacy key and delta encoding while bounding storage.
+limit over the full Base history. Release v0.4.0 replaced it with 16
+deterministic shards, but live Base history proved one of those shards crossed
+the same ceiling at block 39,596,133. Release v0.5.0 uses 64 shards selected by
+the first Pool-ID byte modulo 64. This cuts each former shard into four while
+preserving the legacy key and delta encoding.
 
 Changing the assembler binary must leave every Store hash unchanged. Changing
-the Tick-shard binary may change only the 16 Tick-shard hashes and downstream
+the Tick-shard binary may change only the 64 Tick-shard hashes and downstream
 maps. The cache-boundary tests enforce both invariants.
 
 The NUL metadata audit is a downstream-only certification package. It imports

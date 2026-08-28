@@ -1,7 +1,7 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 #![allow(clippy::too_many_arguments)]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use num_bigint::BigInt as MathBigInt;
 use num_traits::{One, Signed, Zero};
@@ -218,68 +218,187 @@ pub fn map_reducer_inputs(events: Events, tick_deltas: Deltas<DeltaBigInt>) -> R
     }
 }
 
-/// Version-three boundary: Store-owned Pool/Tick state plus cached event-local
-/// integer and Graph Decimal math. Recursive Graph state remains in the ordered
-/// native reducer.
-#[allow(clippy::too_many_arguments)]
+/// Version-three partition boundary: each map stays below the Substreams
+/// 30-input module limit while owning 16 of the 64 Tick Stores.
+macro_rules! store_state_partition_handler {
+    ($handler:ident, $partition:expr, $($tick_deltas:ident),+ $(,)?) => {
+        #[allow(clippy::too_many_arguments)]
+        #[substreams::handlers::map]
+        pub fn $handler(
+            events: Events,
+            pool_ticks: StoreGetBigInt,
+            pool_sqrt_prices: StoreGetBigInt,
+            pool_liquidity: StoreGetBigInt,
+            pool_transaction_counts: StoreGetBigInt,
+            pool_token_decimals: StoreGetBigInt,
+            $($tick_deltas: Deltas<DeltaBigInt>),+
+        ) -> ReducerInputs {
+            build_store_state_partition(
+                &events,
+                &pool_ticks,
+                &pool_sqrt_prices,
+                &pool_liquidity,
+                &pool_transaction_counts,
+                &pool_token_decimals,
+                vec![$($tick_deltas),+],
+                $partition,
+            )
+        }
+    };
+}
+
+store_state_partition_handler!(
+    map_store_state_inputs_00,
+    0,
+    tick_deltas_00,
+    tick_deltas_01,
+    tick_deltas_02,
+    tick_deltas_03,
+    tick_deltas_04,
+    tick_deltas_05,
+    tick_deltas_06,
+    tick_deltas_07,
+    tick_deltas_08,
+    tick_deltas_09,
+    tick_deltas_10,
+    tick_deltas_11,
+    tick_deltas_12,
+    tick_deltas_13,
+    tick_deltas_14,
+    tick_deltas_15
+);
+store_state_partition_handler!(
+    map_store_state_inputs_01,
+    1,
+    tick_deltas_16,
+    tick_deltas_17,
+    tick_deltas_18,
+    tick_deltas_19,
+    tick_deltas_20,
+    tick_deltas_21,
+    tick_deltas_22,
+    tick_deltas_23,
+    tick_deltas_24,
+    tick_deltas_25,
+    tick_deltas_26,
+    tick_deltas_27,
+    tick_deltas_28,
+    tick_deltas_29,
+    tick_deltas_30,
+    tick_deltas_31
+);
+store_state_partition_handler!(
+    map_store_state_inputs_02,
+    2,
+    tick_deltas_32,
+    tick_deltas_33,
+    tick_deltas_34,
+    tick_deltas_35,
+    tick_deltas_36,
+    tick_deltas_37,
+    tick_deltas_38,
+    tick_deltas_39,
+    tick_deltas_40,
+    tick_deltas_41,
+    tick_deltas_42,
+    tick_deltas_43,
+    tick_deltas_44,
+    tick_deltas_45,
+    tick_deltas_46,
+    tick_deltas_47
+);
+store_state_partition_handler!(
+    map_store_state_inputs_03,
+    3,
+    tick_deltas_48,
+    tick_deltas_49,
+    tick_deltas_50,
+    tick_deltas_51,
+    tick_deltas_52,
+    tick_deltas_53,
+    tick_deltas_54,
+    tick_deltas_55,
+    tick_deltas_56,
+    tick_deltas_57,
+    tick_deltas_58,
+    tick_deltas_59,
+    tick_deltas_60,
+    tick_deltas_61,
+    tick_deltas_62,
+    tick_deltas_63
+);
+
+/// Reassemble partition outputs in the immutable decoder event order. Selecting
+/// each partition from the original event makes ordering independent of map
+/// execution order.
 #[substreams::handlers::map]
 pub fn map_store_state_inputs(
     events: Events,
-    pool_ticks: StoreGetBigInt,
-    pool_sqrt_prices: StoreGetBigInt,
-    pool_liquidity: StoreGetBigInt,
-    pool_transaction_counts: StoreGetBigInt,
-    pool_token_decimals: StoreGetBigInt,
-    tick_deltas_00: Deltas<DeltaBigInt>,
-    tick_deltas_01: Deltas<DeltaBigInt>,
-    tick_deltas_02: Deltas<DeltaBigInt>,
-    tick_deltas_03: Deltas<DeltaBigInt>,
-    tick_deltas_04: Deltas<DeltaBigInt>,
-    tick_deltas_05: Deltas<DeltaBigInt>,
-    tick_deltas_06: Deltas<DeltaBigInt>,
-    tick_deltas_07: Deltas<DeltaBigInt>,
-    tick_deltas_08: Deltas<DeltaBigInt>,
-    tick_deltas_09: Deltas<DeltaBigInt>,
-    tick_deltas_10: Deltas<DeltaBigInt>,
-    tick_deltas_11: Deltas<DeltaBigInt>,
-    tick_deltas_12: Deltas<DeltaBigInt>,
-    tick_deltas_13: Deltas<DeltaBigInt>,
-    tick_deltas_14: Deltas<DeltaBigInt>,
-    tick_deltas_15: Deltas<DeltaBigInt>,
+    partition_00: ReducerInputs,
+    partition_01: ReducerInputs,
+    partition_02: ReducerInputs,
+    partition_03: ReducerInputs,
+) -> ReducerInputs {
+    let mut partitions = [
+        VecDeque::from(partition_00.events),
+        VecDeque::from(partition_01.events),
+        VecDeque::from(partition_02.events),
+        VecDeque::from(partition_03.events),
+    ];
+    let output = events
+        .events
+        .into_iter()
+        .map(|event| {
+            let partition = event_store_partition(&event);
+            let output = partitions[partition]
+                .pop_front()
+                .expect("every decoder event belongs to exactly one Store-state partition");
+            assert_eq!(
+                output.event.as_ref(),
+                Some(&event),
+                "Store-state partition output must preserve decoder event order"
+            );
+            output
+        })
+        .collect();
+    assert!(
+        partitions.iter().all(VecDeque::is_empty),
+        "Store-state partitions must not emit extra events"
+    );
+    ReducerInputs {
+        events: output,
+        state_version: 3,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_store_state_partition(
+    events: &Events,
+    pool_ticks: &StoreGetBigInt,
+    pool_sqrt_prices: &StoreGetBigInt,
+    pool_liquidity: &StoreGetBigInt,
+    pool_transaction_counts: &StoreGetBigInt,
+    pool_token_decimals: &StoreGetBigInt,
+    tick_deltas: Vec<Deltas<DeltaBigInt>>,
+    partition: usize,
 ) -> ReducerInputs {
     let mut tick_values = TickDeltaValues::new();
-    for tick_deltas in [
-        tick_deltas_00,
-        tick_deltas_01,
-        tick_deltas_02,
-        tick_deltas_03,
-        tick_deltas_04,
-        tick_deltas_05,
-        tick_deltas_06,
-        tick_deltas_07,
-        tick_deltas_08,
-        tick_deltas_09,
-        tick_deltas_10,
-        tick_deltas_11,
-        tick_deltas_12,
-        tick_deltas_13,
-        tick_deltas_14,
-        tick_deltas_15,
-    ] {
-        tick_values.extend(tick_delta_values(tick_deltas));
+    for deltas in tick_deltas {
+        tick_values.extend(tick_delta_values(deltas));
     }
     ReducerInputs {
         events: events
             .events
             .iter()
+            .filter(|event| event_store_partition(event) == partition)
             .map(|event| {
                 state_reducer_event(
                     event,
-                    &pool_ticks,
-                    &pool_sqrt_prices,
-                    &pool_liquidity,
-                    &pool_transaction_counts,
-                    &pool_token_decimals,
+                    pool_ticks,
+                    pool_sqrt_prices,
+                    pool_liquidity,
+                    pool_transaction_counts,
+                    pool_token_decimals,
                     &tick_values,
                 )
             })
@@ -644,6 +763,18 @@ fn event_pool(event: &Event) -> Option<String> {
     }
 }
 
+fn event_store_partition(event: &Event) -> usize {
+    let pool_id = match event.payload.as_ref() {
+        Some(event::Payload::Initialize(value)) => Some(value.pool_id.as_slice()),
+        Some(event::Payload::ModifyLiquidity(value)) => Some(value.pool_id.as_slice()),
+        Some(event::Payload::Swap(value)) => Some(value.pool_id.as_slice()),
+        _ => None,
+    };
+    pool_id
+        .and_then(|value| value.first().copied())
+        .map_or(0, |first_byte| usize::from((first_byte % 64) / 16))
+}
+
 fn ordinal(event: &Event) -> u64 {
     event.log.as_ref().map_or(0, |value| value.ordinal)
 }
@@ -703,5 +834,25 @@ mod tests {
                 (60, format!("0x{}#60", "22".repeat(32))),
             ]
         );
+    }
+
+    #[test]
+    fn assigns_all_64_tick_shards_to_four_input_partitions() {
+        for first_byte in 0_u8..64 {
+            let event = Event {
+                payload: Some(event::Payload::Initialize(Initialize {
+                    pool_id: vec![first_byte; 32],
+                    ..Default::default()
+                })),
+                ..Default::default()
+            };
+
+            assert_eq!(event_store_partition(&event), usize::from(first_byte / 16));
+        }
+    }
+
+    #[test]
+    fn keeps_non_pool_events_in_the_first_partition() {
+        assert_eq!(event_store_partition(&Event::default()), 0);
     }
 }
