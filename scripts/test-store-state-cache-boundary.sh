@@ -58,7 +58,7 @@ for module in store_pool_tick store_pool_transaction_count store_pool_liquidity;
     fi
 done
 
-for shard in $(seq 0 15); do
+for shard in $(seq 0 63); do
     module=$(printf 'store_tick_liquidity_%02d' "$shard")
     jq -er --arg module_name "$module" \
         '.modules[] | select(.name == $module_name) | .hash | test("^[0-9a-f]{40}$")' \
@@ -109,4 +109,4 @@ if [[ "$map_before" == "$map_after" ]]; then
     exit 1
 fi
 
-echo "verified three imported Store hashes, 16 isolated Tick shards, and downstream cache boundaries"
+echo "verified three imported Store hashes, 64 isolated Tick shards, and downstream cache boundaries"

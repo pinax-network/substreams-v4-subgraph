@@ -5,7 +5,7 @@ repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_dir"
 
 dist=${1:-dist}
-contract=packages/base-uniswap-v4-v0.4.0.json
+contract=${2:-packages/base-uniswap-v4-v0.5.0.json}
 
 for command in jq substreams; do
     command -v "$command" >/dev/null 2>&1 || {
@@ -78,4 +78,8 @@ while IFS=$'\t' read -r module expected; do
     }
 done < <(jq -r '.packages.store_state.tick_liquidity_shards.module_hashes | to_entries[] | [.key,.value] | @tsv' "$contract")
 
-echo "verified byte-identical v0.4.0 Store release packages and module hashes"
+./scripts/verify-store-state-package.sh \
+    "$dist/$(jq -r '.packages.store_state.asset' "$contract")" "$contract" >/dev/null
+
+release=$(jq -er '.release' "$contract")
+echo "verified byte-identical $release Store release packages and module hashes"

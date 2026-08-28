@@ -26,7 +26,7 @@ jobs:
         run: |
           case "$GITHUB_REF_NAME" in
             v0.4.0)
-              make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+              make release-packages-v0.4.0 RELEASE_DIST="$RUNNER_TEMP/release"
               printf '%s\n' \
                 'Canonical immutable Store packages for the Base Uniswap v4 Graph Node backfill. GitHub records each asset digest; the repository release lock preserves the certified SHA-256 values, module hashes, and existing Substreams caches.' \
                 > "$RUNNER_TEMP/release-notes.md"
@@ -35,6 +35,12 @@ jobs:
               make release-nul-audit-package RELEASE_DIST="$RUNNER_TEMP/release"
               printf '%s\n' \
                 'Evidence-only NUL metadata audit package for terminal Base Uniswap v4 certification. It imports the immutable v0.4.0 Store graph and preserves every existing Store cache. GitHub records the asset digest; no checksum sidecar is published.' \
+                > "$RUNNER_TEMP/release-notes.md"
+              ;;
+            v0.5.0)
+              make release-packages RELEASE_DIST="$RUNNER_TEMP/release"
+              printf '%s\n' \
+                'Store-state v0.5.0 expands Tick liquidity from 16 to 64 deterministic shards after live Base history reached the 2 GiB per-Store ceiling. The imported State Stores and Store-fed packages remain byte-identical; the release lock verifies every SPKG digest, module hash, and cache boundary.' \
                 > "$RUNNER_TEMP/release-notes.md"
               ;;
             *)
