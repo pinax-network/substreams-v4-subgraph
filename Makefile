@@ -1,4 +1,4 @@
-ENDPOINT ?= base-substreams-tier1-prod.kan-sst2.pinax.io:443
+ENDPOINT ?= base.substreams.pinax.network:443
 START_BLOCK ?= 26990279
 STOP_BLOCK ?= 26990521
 SPKG_DIR ?= spkg

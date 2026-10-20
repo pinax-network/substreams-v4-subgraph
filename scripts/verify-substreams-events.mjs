@@ -17,7 +17,7 @@ const lock = JSON.parse(
     'utf8',
   ),
 )
-const endpoint = process.env.ENDPOINT || 'base-substreams-tier1-prod.kan-sst2.pinax.io:443'
+const endpoint = process.env.ENDPOINT || 'base.substreams.pinax.network:443'
 const sourceAddresses = new Map(
   lock.data_sources.map(({ name, address }) => [`DATA_SOURCE_${snake(name)}`, address.toLowerCase()]),
 )
