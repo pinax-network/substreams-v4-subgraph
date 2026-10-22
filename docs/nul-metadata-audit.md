@@ -54,7 +54,7 @@ certification runtime:
 
 ```bash
 substreams-native \
-  -e base-substreams-tier1-prod.kan-sst2.pinax.io:443 \
+  -e base.substreams.pinax.network:443 \
   uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg \
   map_nul_metadata_audit \
   -s 34546213 -t 49477582 \

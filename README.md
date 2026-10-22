@@ -102,7 +102,7 @@ make run
 
 Defaults:
 
-- endpoint: `base-substreams-tier1-prod.kan-sst2.pinax.io:443`;
+- endpoint: `base.substreams.pinax.network:443`;
 - range: `[26,990,279, 26,990,521)`.
 
 Override `ENDPOINT`, `START_BLOCK`, or `STOP_BLOCK` when testing another pinned
